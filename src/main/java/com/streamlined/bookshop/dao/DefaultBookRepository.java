@@ -18,14 +18,16 @@ import com.streamlined.bookshop.model.Book.Size;
 public class DefaultBookRepository implements BookRepository {
 
 	private final List<Book> books = new ArrayList<>(List.of(
-			Book.builder().id(UUID.randomUUID()).author("Jack Peterson").title("Tales of sorcerer").isbn("12345")
-					.publishDate(LocalDate.of(2000, 1, 1)).genre(Genre.FICTIONAL).country("Britain").language("English")
-					.pageCount(100).size(Size.DUODECIMO).cover(new Cover(Cover.Type.HARD, Cover.Surface.GLOSS)).build(),
-			Book.builder().id(UUID.randomUUID()).author("Jane Nickolson").title("Heavens").isbn("56789")
-					.publishDate(LocalDate.of(2001, 1, 1)).genre(Genre.BIOGRAPHICAL).country("USA").language("English")
-					.pageCount(200).size(Size.FOLIO).cover(new Cover(Cover.Type.SOFT, Cover.Surface.SILK)).build(),
-			Book.builder().id(UUID.randomUUID()).author("Richard Funny").title("Jokes and jests").isbn("90123")
-					.publishDate(LocalDate.of(2002, 1, 1)).genre(Genre.EDUCATIONAL).country("Australia")
+			Book.builder().id(UUID.nameUUIDFromBytes("1".getBytes())).author("Jack Peterson").title("Tales of sorcerer")
+					.isbn("12345").publishDate(LocalDate.of(2000, 1, 1)).genre(Genre.FICTIONAL).country("Britain")
+					.language("English").pageCount(100).size(Size.DUODECIMO)
+					.cover(new Cover(Cover.Type.HARD, Cover.Surface.GLOSS)).build(),
+			Book.builder().id(UUID.nameUUIDFromBytes("2".getBytes())).author("Jane Nickolson").title("Heavens")
+					.isbn("56789").publishDate(LocalDate.of(2001, 1, 1)).genre(Genre.BIOGRAPHICAL).country("USA")
+					.language("English").pageCount(200).size(Size.FOLIO)
+					.cover(new Cover(Cover.Type.SOFT, Cover.Surface.SILK)).build(),
+			Book.builder().id(UUID.nameUUIDFromBytes("3".getBytes())).author("Richard Funny").title("Jokes and jests")
+					.isbn("90123").publishDate(LocalDate.of(2002, 1, 1)).genre(Genre.EDUCATIONAL).country("Australia")
 					.language("English").pageCount(50).size(Size.QUARTO)
 					.cover(new Cover(Cover.Type.SOFT, Cover.Surface.UNCOATED)).build()));
 
