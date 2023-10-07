@@ -12,10 +12,10 @@ public class BookMapper {
 	}
 
 	public BookDto toDto(Book entity) {
-		return BookDto.builder().id(entity.getId()).author(entity.getAuthor()).isbn(entity.getIsbn())
-				.publishDate(entity.getPublishDate()).genre(entity.getGenre()).country(entity.getCountry())
-				.language(entity.getLanguage()).pageCount(entity.getPageCount()).size(entity.getSize())
-				.cover(entity.getCover()).build();
+		return BookDto.builder().id(entity.getId()).author(entity.getAuthor()).title(entity.getTitle())
+				.isbn(entity.getIsbn()).publishDate(entity.getPublishDate()).genre(entity.getGenre())
+				.country(entity.getCountry()).language(entity.getLanguage()).pageCount(entity.getPageCount())
+				.size(entity.getSize()).cover(entity.getCover()).build();
 	}
 
 }

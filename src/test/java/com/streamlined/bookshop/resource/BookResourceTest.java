@@ -3,6 +3,7 @@ package com.streamlined.bookshop.resource;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,7 +18,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import com.streamlined.bookshop.dao.DefaultBookRepository;
 import com.streamlined.bookshop.exception.BookAlreadyAddedMapper;
 import com.streamlined.bookshop.exception.NoBookFoundMapper;
-import com.streamlined.bookshop.model.Book;
+import com.streamlined.bookshop.model.BookDto;
+import com.streamlined.bookshop.model.BookMapper;
 import com.streamlined.bookshop.model.Cover;
 import com.streamlined.bookshop.model.Genre;
 import com.streamlined.bookshop.model.Size;
@@ -36,7 +38,8 @@ class BookResourceTest extends JerseyTest {
 
 	@Override
 	protected Application configure() {
-		appContext = new AnnotationConfigApplicationContext(DefaultBookService.class, DefaultBookRepository.class);
+		appContext = new AnnotationConfigApplicationContext(BookMapper.class, DefaultBookService.class,
+				DefaultBookRepository.class);
 		final ResourceConfig config = new ResourceConfig(BookResource.class, BookAlreadyAddedMapper.class,
 				NoBookFoundMapper.class);
 		config.property("contextConfig", appContext);
@@ -57,16 +60,16 @@ class BookResourceTest extends JerseyTest {
 	@DisplayName("return book list for correct GET request")
 	void givenGetAllBooks_whenCorrectRequest_thenResponseShouldBeOkAndReturnListOfBooks() {
 		final String resourceLocation = "/books";
-		Book[] expectedContent = getBookService().getAllBooks().toArray(new Book[0]);
+		List<BookDto> expectedContent = getBookService().getAllBooks().toList();
 
 		Response response = target(resourceLocation).request().get();
 
-		Book[] content = response.readEntity(Book[].class);
+		List<BookDto> content = List.of(response.readEntity(BookDto[].class));
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		assertEquals(MediaType.APPLICATION_JSON, response.getMediaType().toString());
 		assertNull(response.getLocation());
-		assertArrayEquals(expectedContent, content);
+		assertEquals(expectedContent, content);
 	}
 
 	@Test
@@ -86,11 +89,11 @@ class BookResourceTest extends JerseyTest {
 	void givenGetBook_whenCorrectRequestAndBookFound_thenResponseShouldBeOkAndReturnBook() {
 		final UUID uuid = UUID.nameUUIDFromBytes("1".getBytes());
 		final String resourceLocation = "/books/" + uuid.toString();
-		Book expectedBook = getBookService().getBook(uuid).get();
+		BookDto expectedBook = getBookService().getBook(uuid).get();
 
 		Response response = target(resourceLocation).request().get();
 
-		Book actualBook = response.readEntity(Book.class);
+		BookDto actualBook = response.readEntity(BookDto.class);
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		assertEquals(MediaType.APPLICATION_JSON, response.getMediaType().toString());
@@ -117,14 +120,15 @@ class BookResourceTest extends JerseyTest {
 		final UUID uuid = UUID.nameUUIDFromBytes("1".getBytes());
 		final String resourceLocation = "/books/" + uuid.toString();
 
-		Book expectedBook = Book.builder().id(uuid).author("Jennifer Peterson").title("Tales of witch").isbn("23456")
-				.publishDate(LocalDate.of(2000, 1, 1)).genre(Genre.FICTIONAL).country("Britain").language("English")
-				.pageCount(100).size(Size.DUODECIMO).cover(new Cover(Cover.Type.HARD, Cover.Surface.GLOSS)).build();
+		BookDto expectedBook = BookDto.builder().id(uuid).author("Jennifer Peterson").title("Tales of witch")
+				.isbn("23456").publishDate(LocalDate.of(2000, 1, 1)).genre(Genre.FICTIONAL).country("Britain")
+				.language("English").pageCount(100).size(Size.DUODECIMO)
+				.cover(new Cover(Cover.Type.HARD, Cover.Surface.GLOSS)).build();
 
 		Response response = target(resourceLocation).request()
 				.put(Entity.entity(expectedBook, MediaType.APPLICATION_JSON));
 
-		Book actualBook = getBookService().getBook(uuid).get();
+		BookDto actualBook = getBookService().getBook(uuid).get();
 
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		assertNull(response.getMediaType());
@@ -139,14 +143,14 @@ class BookResourceTest extends JerseyTest {
 		final UUID wrongUuid = UUID.nameUUIDFromBytes("-1".getBytes());
 		final String resourceLocation = "/books/" + wrongUuid.toString();
 
-		Book newBook = Book.builder().id(uuid).author("Jennifer Peterson").title("Tales of witch").isbn("23456")
+		BookDto newBook = BookDto.builder().id(uuid).author("Jennifer Peterson").title("Tales of witch").isbn("23456")
 				.publishDate(LocalDate.of(2000, 1, 1)).genre(Genre.FICTIONAL).country("Britain").language("English")
 				.pageCount(100).size(Size.DUODECIMO).cover(new Cover(Cover.Type.HARD, Cover.Surface.GLOSS)).build();
-		Book originalBook = getBookService().getBook(uuid).get();
+		BookDto originalBook = getBookService().getBook(uuid).get();
 
 		Response response = target(resourceLocation).request().put(Entity.entity(newBook, MediaType.APPLICATION_JSON));
 
-		Book actualBook = getBookService().getBook(uuid).get();
+		BookDto actualBook = getBookService().getBook(uuid).get();
 
 		assertEquals(Status.NOT_MODIFIED.getStatusCode(), response.getStatus());
 		assertNull(response.getMediaType());
@@ -162,7 +166,7 @@ class BookResourceTest extends JerseyTest {
 
 		Response response = target(resourceLocation).request().delete();
 
-		Optional<Book> actualBook = getBookService().getBook(uuid);
+		Optional<BookDto> actualBook = getBookService().getBook(uuid);
 
 		assertTrue(actualBook.isEmpty());
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -176,11 +180,11 @@ class BookResourceTest extends JerseyTest {
 		final UUID wrongUuid = UUID.nameUUIDFromBytes("-1".getBytes());
 		final UUID uuid = UUID.nameUUIDFromBytes("1".getBytes());
 		final String resourceLocation = "/books/" + wrongUuid.toString();
-		Book originalBook = getBookService().getBook(uuid).get();
+		BookDto originalBook = getBookService().getBook(uuid).get();
 
 		Response response = target(resourceLocation).request().delete();
 
-		Optional<Book> actualBook = getBookService().getBook(uuid);
+		Optional<BookDto> actualBook = getBookService().getBook(uuid);
 
 		assertFalse(actualBook.isEmpty());
 		assertEquals(originalBook, actualBook.get());
@@ -194,14 +198,14 @@ class BookResourceTest extends JerseyTest {
 	void givenAddBook_whenCorrectRequestAndBookNotFound_thenResponseShouldBeOkAndBookAdded() {
 		final UUID uuid = UUID.nameUUIDFromBytes("4".getBytes());
 		final String resourceLocation = "/books";
-		Book expectedBook = Book.builder().id(uuid).author("Rocky Balboa").title("Rambo").isbn("77777")
+		BookDto expectedBook = BookDto.builder().id(uuid).author("Rocky Balboa").title("Rambo").isbn("77777")
 				.publishDate(LocalDate.of(1995, 1, 1)).genre(Genre.HISTORICAL).country("USA").language("English")
 				.pageCount(30).size(Size.QUARTO).cover(new Cover(Cover.Type.SOFT, Cover.Surface.GLOSS)).build();
 
 		Response response = target(resourceLocation).request()
 				.post(Entity.entity(expectedBook, MediaType.APPLICATION_JSON));
 
-		Optional<Book> actualBook = getBookService().getBook(uuid);
+		Optional<BookDto> actualBook = getBookService().getBook(uuid);
 
 		assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
 		assertNull(response.getMediaType());
@@ -215,14 +219,14 @@ class BookResourceTest extends JerseyTest {
 	void givenAddBook_whenCorrectRequestAndBookFound_thenBookShouldNotBeAdded() {
 		final UUID uuid = UUID.nameUUIDFromBytes("1".getBytes());
 		final String resourceLocation = "/books";
-		Book newBook = Book.builder().id(uuid).author("Rocky Balboa").title("Rambo").isbn("77777")
+		BookDto newBook = BookDto.builder().id(uuid).author("Rocky Balboa").title("Rambo").isbn("77777")
 				.publishDate(LocalDate.of(1995, 1, 1)).genre(Genre.HISTORICAL).country("USA").language("English")
 				.pageCount(30).size(Size.QUARTO).cover(new Cover(Cover.Type.SOFT, Cover.Surface.GLOSS)).build();
-		int originalSize = getBookService().getAllBooks().size();
+		long originalSize = getBookService().getAllBooks().count();
 
 		Response response = target(resourceLocation).request().post(Entity.entity(newBook, MediaType.APPLICATION_JSON));
 
-		int actualSize = getBookService().getAllBooks().size();
+		long actualSize = getBookService().getAllBooks().count();
 
 		assertEquals(originalSize, actualSize);
 		assertNotNull(response);

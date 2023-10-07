@@ -1,13 +1,14 @@
 package com.streamlined.bookshop.service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
 import com.streamlined.bookshop.dao.BookRepository;
-import com.streamlined.bookshop.model.Book;
+import com.streamlined.bookshop.model.BookDto;
+import com.streamlined.bookshop.model.BookMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,20 +17,21 @@ import lombok.RequiredArgsConstructor;
 public class DefaultBookService implements BookService {
 
 	private final BookRepository bookRepository;
+	private final BookMapper bookMapper;
 
 	@Override
-	public List<Book> getAllBooks() {
-		return bookRepository.getAllBooks();
+	public Stream<BookDto> getAllBooks() {
+		return bookRepository.getAllBooks().stream().map(bookMapper::toDto);
 	}
 
 	@Override
-	public Optional<Book> getBook(UUID id) {
-		return bookRepository.getBook(id);
+	public Optional<BookDto> getBook(UUID id) {
+		return bookRepository.getBook(id).map(bookMapper::toDto);
 	}
 
 	@Override
-	public boolean updateBook(Book book, UUID id) {
-		return bookRepository.updateBook(book, id);
+	public boolean updateBook(BookDto book, UUID id) {
+		return bookRepository.updateBook(bookMapper.toEntity(book), id);
 	}
 
 	@Override
@@ -38,8 +40,8 @@ public class DefaultBookService implements BookService {
 	}
 
 	@Override
-	public void addBook(Book book) {
-		bookRepository.addBook(book);
+	public void addBook(BookDto book) {
+		bookRepository.addBook(bookMapper.toEntity(book));
 	}
 
 }

@@ -1,11 +1,11 @@
 package com.streamlined.bookshop.resource;
 
-import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import com.streamlined.bookshop.exception.NoBookFoundException;
-import com.streamlined.bookshop.model.Book;
+import com.streamlined.bookshop.model.BookDto;
 import com.streamlined.bookshop.service.BookService;
 
 import jakarta.ws.rs.Consumes;
@@ -33,14 +33,14 @@ public class BookResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<Book> getAllBooks() {
+	public Stream<BookDto> getAllBooks() {
 		return bookService.getAllBooks();
 	}
 
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Book getBook(@PathParam("id") UUID id) {
+	public BookDto getBook(@PathParam("id") UUID id) {
 		return bookService.getBook(id)
 				.orElseThrow(() -> new NoBookFoundException("no book found with id %s".formatted(id.toString())));
 	}
@@ -48,7 +48,7 @@ public class BookResource {
 	@PUT
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response updateBook(Book book, @PathParam("id") UUID id) {
+	public Response updateBook(BookDto book, @PathParam("id") UUID id) {
 		var updated = bookService.updateBook(book, id);
 		return (updated ? Response.ok() : Response.notModified()).build();
 	}
@@ -63,14 +63,14 @@ public class BookResource {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response addBook(Book book, @Context UriInfo uriInfo) {
+	public Response addBook(BookDto book, @Context UriInfo uriInfo) {
 		bookService.addBook(book);
 		return Response.status(Response.Status.CREATED.getStatusCode())
 				.header("Location", getResourceLocation(uriInfo, book)).build();
 	}
 
-	private String getResourceLocation(UriInfo uriInfo, Book book) {
-		return "%s/%s".formatted(uriInfo.getAbsolutePath().toString(), book.getId().toString());
+	private String getResourceLocation(UriInfo uriInfo, BookDto book) {
+		return "%s/%s".formatted(uriInfo.getAbsolutePath().toString(), book.id().toString());
 	}
 
 }

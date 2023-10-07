@@ -1,21 +1,21 @@
 package com.streamlined.bookshop.service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
-import com.streamlined.bookshop.model.Book;
+import com.streamlined.bookshop.model.BookDto;
 
 public interface BookService {
 
-	List<Book> getAllBooks();
+	Stream<BookDto> getAllBooks();
 
-	Optional<Book> getBook(UUID id);
+	Optional<BookDto> getBook(UUID id);
 
-	boolean updateBook(Book book, UUID id);
+	boolean updateBook(BookDto book, UUID id);
 
 	boolean deleteBook(UUID id);
 
-	void addBook(Book book);
+	void addBook(BookDto book);
 	
 }
