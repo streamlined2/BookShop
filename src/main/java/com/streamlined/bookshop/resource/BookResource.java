@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import com.streamlined.bookshop.dao.BookRepository;
 import com.streamlined.bookshop.exception.NoBookFoundException;
 import com.streamlined.bookshop.model.Book;
+import com.streamlined.bookshop.service.BookService;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -29,19 +29,19 @@ import lombok.NoArgsConstructor;
 public class BookResource {
 
 	@Autowired
-	private BookRepository bookRepository;
+	private BookService bookService;
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Book> getAllBooks() {
-		return bookRepository.getAllBooks();
+		return bookService.getAllBooks();
 	}
 
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Book getBook(@PathParam("id") UUID id) {
-		return bookRepository.getBook(id)
+		return bookService.getBook(id)
 				.orElseThrow(() -> new NoBookFoundException("no book found with id %s".formatted(id.toString())));
 	}
 
@@ -49,7 +49,7 @@ public class BookResource {
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateBook(Book book, @PathParam("id") UUID id) {
-		var updated = bookRepository.updateBook(book, id);
+		var updated = bookService.updateBook(book, id);
 		return (updated ? Response.ok() : Response.notModified()).build();
 	}
 
@@ -57,14 +57,14 @@ public class BookResource {
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteBook(@PathParam("id") UUID id) {
-		var deleted = bookRepository.deleteBook(id);
+		var deleted = bookService.deleteBook(id);
 		return (deleted ? Response.ok() : Response.notModified()).build();
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response addBook(Book book, @Context UriInfo uriInfo) {
-		bookRepository.addBook(book);
+		bookService.addBook(book);
 		return Response.status(Response.Status.CREATED.getStatusCode())
 				.header("Location", getResourceLocation(uriInfo, book)).build();
 	}
