@@ -10,9 +10,9 @@ import org.springframework.stereotype.Repository;
 
 import com.streamlined.bookshop.exception.BookAlreadyAddedException;
 import com.streamlined.bookshop.model.Book;
-import com.streamlined.bookshop.model.Book.Cover;
-import com.streamlined.bookshop.model.Book.Genre;
-import com.streamlined.bookshop.model.Book.Size;
+import com.streamlined.bookshop.model.Cover;
+import com.streamlined.bookshop.model.Genre;
+import com.streamlined.bookshop.model.Size;
 
 @Repository
 public class DefaultBookRepository implements BookRepository {

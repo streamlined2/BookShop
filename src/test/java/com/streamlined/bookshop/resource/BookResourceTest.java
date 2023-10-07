@@ -18,9 +18,9 @@ import com.streamlined.bookshop.dao.DefaultBookRepository;
 import com.streamlined.bookshop.exception.BookAlreadyAddedMapper;
 import com.streamlined.bookshop.exception.NoBookFoundMapper;
 import com.streamlined.bookshop.model.Book;
-import com.streamlined.bookshop.model.Book.Cover;
-import com.streamlined.bookshop.model.Book.Genre;
-import com.streamlined.bookshop.model.Book.Size;
+import com.streamlined.bookshop.model.Cover;
+import com.streamlined.bookshop.model.Genre;
+import com.streamlined.bookshop.model.Size;
 import com.streamlined.bookshop.service.BookService;
 import com.streamlined.bookshop.service.DefaultBookService;
 
