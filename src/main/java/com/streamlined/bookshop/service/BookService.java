@@ -12,9 +12,9 @@ public interface BookService {
 
 	Optional<BookDto> getBook(UUID id);
 
-	boolean updateBook(BookDto book, UUID id);
+	void updateBook(BookDto book, UUID id);
 
-	boolean deleteBook(UUID id);
+	void deleteBook(UUID id);
 
 	void addBook(BookDto book);
 	

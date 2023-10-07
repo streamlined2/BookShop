@@ -49,16 +49,16 @@ public class BookResource {
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateBook(BookDto book, @PathParam("id") UUID id) {
-		var updated = bookService.updateBook(book, id);
-		return (updated ? Response.ok() : Response.notModified()).build();
+		bookService.updateBook(book, id);
+		return Response.ok().build();
 	}
 
 	@DELETE
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteBook(@PathParam("id") UUID id) {
-		var deleted = bookService.deleteBook(id);
-		return (deleted ? Response.ok() : Response.notModified()).build();
+		bookService.deleteBook(id);
+		return Response.ok().build();
 	}
 
 	@POST

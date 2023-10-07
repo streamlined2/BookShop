@@ -1,21 +1,11 @@
 package com.streamlined.bookshop.dao;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
 import com.streamlined.bookshop.model.Book;
 
-public interface BookRepository {
-
-	List<Book> getAllBooks();
-
-	Optional<Book> getBook(UUID id);
-
-	boolean updateBook(Book book, UUID id);
-
-	boolean deleteBook(UUID id);
-
-	void addBook(Book book);
-
+@Repository
+public interface BookRepository extends MongoRepository<Book, UUID> {
 }

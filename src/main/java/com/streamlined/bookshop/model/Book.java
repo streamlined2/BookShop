@@ -5,11 +5,10 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.UUID;
 
-import org.hibernate.annotations.UuidGenerator;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@Document
+@Document(collection = "books")
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
@@ -29,18 +28,17 @@ public class Book implements Comparable<Book> {
 			.comparing(Book::getAuthor).thenComparing(Book::getTitle).thenComparing(Book::getPublishDate);
 
 	@Id
-	@UuidGenerator
-	@org.hibernate.validator.constraints.UUID
+	// @UuidGenerator
 	@EqualsAndHashCode.Include
 	private UUID id;
 
-	@Indexed(background = true)
+	@Indexed
 	private String author;
 
-	@Indexed(background = true)
+	@Indexed
 	private String title;
 
-	@Indexed(background = true, unique = true)
+	@Indexed(unique = true)
 	private String isbn;
 
 	private LocalDate publishDate;

@@ -21,27 +21,29 @@ public class DefaultBookService implements BookService {
 
 	@Override
 	public Stream<BookDto> getAllBooks() {
-		return bookRepository.getAllBooks().stream().map(bookMapper::toDto);
+		return bookRepository.findAll().stream().map(bookMapper::toDto);
 	}
 
 	@Override
 	public Optional<BookDto> getBook(UUID id) {
-		return bookRepository.getBook(id).map(bookMapper::toDto);
+		return bookRepository.findById(id).map(bookMapper::toDto);
 	}
 
 	@Override
-	public boolean updateBook(BookDto book, UUID id) {
-		return bookRepository.updateBook(bookMapper.toEntity(book), id);
+	public void updateBook(BookDto book, UUID id) {
+		var entity = bookMapper.toEntity(book);
+		entity.setId(id);
+		bookRepository.save(entity);
 	}
 
 	@Override
-	public boolean deleteBook(UUID id) {
-		return bookRepository.deleteBook(id);
+	public void deleteBook(UUID id) {
+		bookRepository.deleteById(id);
 	}
 
 	@Override
 	public void addBook(BookDto book) {
-		bookRepository.addBook(bookMapper.toEntity(book));
+		bookRepository.insert(bookMapper.toEntity(book));
 	}
 
 }

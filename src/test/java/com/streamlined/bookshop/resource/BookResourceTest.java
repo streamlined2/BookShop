@@ -15,7 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import com.streamlined.bookshop.dao.DefaultBookRepository;
+import com.streamlined.bookshop.config.MongoDBBeforeConvertCallbackComponent;
 import com.streamlined.bookshop.exception.BookAlreadyAddedMapper;
 import com.streamlined.bookshop.exception.NoBookFoundMapper;
 import com.streamlined.bookshop.model.BookDto;
@@ -33,13 +33,13 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
 class BookResourceTest extends JerseyTest {
-
+	
 	private AnnotationConfigApplicationContext appContext;
 
 	@Override
 	protected Application configure() {
-		appContext = new AnnotationConfigApplicationContext(BookMapper.class, DefaultBookService.class,
-				DefaultBookRepository.class);
+		appContext = new AnnotationConfigApplicationContext(MongoDBBeforeConvertCallbackComponent.class,
+				BookMapper.class, DefaultBookService.class);
 		final ResourceConfig config = new ResourceConfig(BookResource.class, BookAlreadyAddedMapper.class,
 				NoBookFoundMapper.class);
 		config.property("contextConfig", appContext);
