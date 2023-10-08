@@ -64,9 +64,9 @@ public class BookResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response addBook(BookDto book, @Context UriInfo uriInfo) {
-		bookService.addBook(book);
+		BookDto newBook = bookService.addBook(book);
 		return Response.status(Response.Status.CREATED.getStatusCode())
-				.header("Location", getResourceLocation(uriInfo, book)).build();
+				.header("Location", getResourceLocation(uriInfo, newBook)).build();
 	}
 
 	private String getResourceLocation(UriInfo uriInfo, BookDto book) {

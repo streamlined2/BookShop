@@ -16,6 +16,6 @@ public interface BookService {
 
 	void deleteBook(UUID id);
 
-	void addBook(BookDto book);
+	BookDto addBook(BookDto book);
 	
 }

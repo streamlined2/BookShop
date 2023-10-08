@@ -42,8 +42,8 @@ public class DefaultBookService implements BookService {
 	}
 
 	@Override
-	public void addBook(BookDto book) {
-		bookRepository.insert(bookMapper.toEntity(book));
+	public BookDto addBook(BookDto book) {
+		return bookMapper.toDto(bookRepository.insert(bookMapper.toEntity(book)));
 	}
 
 }

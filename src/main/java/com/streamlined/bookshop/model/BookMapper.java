@@ -3,7 +3,7 @@ package com.streamlined.bookshop.model;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BookMapper {
+public class BookMapper implements Mapper<Book, BookDto> {
 
 	public Book toEntity(BookDto dto) {
 		return Book.builder().id(dto.id()).author(dto.author()).title(dto.title()).isbn(dto.isbn())
