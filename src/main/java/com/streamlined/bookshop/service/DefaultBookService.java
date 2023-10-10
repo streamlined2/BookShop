@@ -1,9 +1,8 @@
 package com.streamlined.bookshop.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
-
 import org.springframework.stereotype.Service;
 
 import com.streamlined.bookshop.dao.BookRepository;
@@ -18,15 +17,24 @@ public class DefaultBookService implements BookService {
 
 	private final BookRepository bookRepository;
 	private final BookMapper bookMapper;
+	private final List<NotificationService> notificationServiceList;
 
 	@Override
-	public Stream<BookDto> getAllBooks() {
-		return bookRepository.findAll().stream().map(bookMapper::toDto);
+	public List<BookDto> getAllBooks() {
+		List<BookDto> bookList = bookRepository.findAll().stream().map(bookMapper::toDto).toList();
+		publishQueryResultMessage(bookList);
+		return bookList;
+	}
+
+	private void publishQueryResultMessage(final Object message) {
+		notificationServiceList.forEach(service -> service.publishQueryResult(message));
 	}
 
 	@Override
 	public Optional<BookDto> getBook(UUID id) {
-		return bookRepository.findById(id).map(bookMapper::toDto);
+		Optional<BookDto> book = bookRepository.findById(id).map(bookMapper::toDto);
+		book.map(List::of).ifPresent(this::publishQueryResultMessage);
+		return book;
 	}
 
 	@Override

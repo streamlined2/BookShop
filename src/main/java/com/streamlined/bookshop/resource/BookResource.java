@@ -1,8 +1,7 @@
 package com.streamlined.bookshop.resource;
 
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import com.streamlined.bookshop.exception.NoBookFoundException;
 import com.streamlined.bookshop.model.BookDto;
@@ -33,7 +32,7 @@ public class BookResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Stream<BookDto> getAllBooks() {
+	public List<BookDto> getAllBooks() {
 		return bookService.getAllBooks();
 	}
 
