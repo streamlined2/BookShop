@@ -1,4 +1,4 @@
-package com.streamlined.bookshop.service;
+package com.streamlined.bookshop.service.book;
 
 import java.util.List;
 import java.util.Optional;

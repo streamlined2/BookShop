@@ -1,4 +1,4 @@
-package com.streamlined.bookshop.service;
+package com.streamlined.bookshop.eventconsumer;
 
 public class ConsumerException extends RuntimeException {
 

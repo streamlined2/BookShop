@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.streamlined.bookshop.exception.NoBookFoundException;
 import com.streamlined.bookshop.model.BookDto;
-import com.streamlined.bookshop.service.BookService;
+import com.streamlined.bookshop.service.book.BookService;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;

@@ -23,7 +23,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import com.streamlined.bookshop.config.MongoDBBeforeConvertCallbackComponent;
+import com.streamlined.bookshop.config.database.MongoDBBeforeConvertCallbackComponent;
 import com.streamlined.bookshop.dao.BookRepository;
 import com.streamlined.bookshop.exception.BookAlreadyAddedMapper;
 import com.streamlined.bookshop.exception.NoBookFoundMapper;
@@ -33,8 +33,8 @@ import com.streamlined.bookshop.model.BookMapper;
 import com.streamlined.bookshop.model.Cover;
 import com.streamlined.bookshop.model.Genre;
 import com.streamlined.bookshop.model.Size;
-import com.streamlined.bookshop.service.BookService;
-import com.streamlined.bookshop.service.DefaultBookService;
+import com.streamlined.bookshop.service.book.BookService;
+import com.streamlined.bookshop.service.book.DefaultBookService;
 
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Application;

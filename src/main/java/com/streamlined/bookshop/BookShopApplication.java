@@ -31,6 +31,7 @@ public class BookShopApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
+
 		final List<Book> books = new ArrayList<>(List.of(
 				Book.builder().id(UUID.nameUUIDFromBytes("1".getBytes())).author("Jack Peterson")
 						.title("Tales of sorcerer").isbn("12345").publishDate(LocalDate.of(2000, 1, 1))

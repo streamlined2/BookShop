@@ -1,4 +1,4 @@
-package com.streamlined.bookshop.config;
+package com.streamlined.bookshop.config.database;
 
 import java.util.UUID;
 

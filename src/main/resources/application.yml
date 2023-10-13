@@ -8,7 +8,9 @@ server:
 debug: false
 spring:
   application:
-    name: bookshop
+    name: BookShop
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration, org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
   data:
     mongodb:
       host: localhost
@@ -18,8 +20,9 @@ spring:
       uuid-representation: standard
       username: user
       password: secret
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration, org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      replica-set-name: replicaset
+      ssl:
+        enabled: false
   rabbitmq:
     host: localhost
     port: 5672
