@@ -9,6 +9,7 @@ import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.streamlined.bookshop.dao.BookRepository;
 import com.streamlined.bookshop.model.Book;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @SpringBootApplication
 @EnableRabbit
+@EnableScheduling
 @RequiredArgsConstructor
 public class BookShopApplication implements CommandLineRunner {
 

@@ -1,5 +1,6 @@
 package com.streamlined.bookshop.resource;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,28 +49,28 @@ public class BookResource {
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateBook(BookDto book, @PathParam("id") UUID id) {
-		bookService.updateBook(book, id);
-		return Response.ok().build();
+		var updatedBook = bookService.updateBook(book, id);
+		return updatedBook.map(Response::ok).orElse(Response.noContent()).build();
 	}
 
 	@DELETE
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteBook(@PathParam("id") UUID id) {
-		bookService.deleteBook(id);
-		return Response.ok().build();
+		var deletedBook = bookService.deleteBook(id);
+		return deletedBook.map(Response::ok).orElse(Response.noContent()).build();
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response addBook(BookDto book, @Context UriInfo uriInfo) {
-		BookDto newBook = bookService.addBook(book);
-		return Response.status(Response.Status.CREATED.getStatusCode())
-				.header("Location", getResourceLocation(uriInfo, newBook)).build();
+	public Response addBook(BookDto bookDto, @Context UriInfo uriInfo) {
+		var newBook = bookService.addBook(bookDto);
+		return newBook.map(book -> Response.created(getResourceLocation(uriInfo, book))).orElse(Response.noContent())
+				.build();
 	}
 
-	private String getResourceLocation(UriInfo uriInfo, BookDto book) {
-		return "%s/%s".formatted(uriInfo.getAbsolutePath().toString(), book.id().toString());
+	private URI getResourceLocation(UriInfo uriInfo, BookDto book) {
+		return URI.create("%s/%s".formatted(uriInfo.getAbsolutePath().toString(), book.id().toString()));
 	}
 
 }

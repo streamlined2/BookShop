@@ -57,7 +57,7 @@ class BookResourceTest extends JerseyTest {
 	protected Application configure() {
 		bookRepository = mock(BookRepository.class);
 		bookMapper = new BookMapper();
-		bookService = new DefaultBookService(bookRepository, bookMapper, List.of());
+		bookService = new DefaultBookService(bookRepository, bookMapper);
 		appContext = new AnnotationConfigApplicationContext(MongoDBBeforeConvertCallbackComponent.class,
 				BookMapper.class);
 		appContext.registerBean(BookService.class, () -> bookService);
