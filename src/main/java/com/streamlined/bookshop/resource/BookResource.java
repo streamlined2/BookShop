@@ -50,7 +50,7 @@ public class BookResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateBook(BookDto book, @PathParam("id") UUID id) {
 		var updatedBook = bookService.updateBook(book, id);
-		return updatedBook.map(Response::ok).orElse(Response.noContent()).build();
+		return updatedBook.isPresent() ? Response.ok().build() : Response.noContent().build();
 	}
 
 	@DELETE
@@ -58,15 +58,15 @@ public class BookResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteBook(@PathParam("id") UUID id) {
 		var deletedBook = bookService.deleteBook(id);
-		return deletedBook.map(Response::ok).orElse(Response.noContent()).build();
+		return deletedBook.isPresent() ? Response.ok().build() : Response.noContent().build();
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response addBook(BookDto bookDto, @Context UriInfo uriInfo) {
 		var newBook = bookService.addBook(bookDto);
-		return newBook.map(book -> Response.created(getResourceLocation(uriInfo, book))).orElse(Response.noContent())
-				.build();
+		return newBook.isPresent() ? Response.created(getResourceLocation(uriInfo, newBook.get())).build()
+				: Response.noContent().build();
 	}
 
 	private URI getResourceLocation(UriInfo uriInfo, BookDto book) {

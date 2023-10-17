@@ -154,7 +154,7 @@ class BookResourceTest extends JerseyTest {
 	}
 
 	@Test
-	@DisplayName("report NOT FOUND if book not found")
+	@DisplayName("report NOT FOUND if book not found for correct GET request")
 	void givenGetBook_whenCorrectRequestAndBookNotFound_thenResponseShouldBeNotFound() {
 		final String resourceLocation = "/books/" + WRONG_UUID.toString();
 		when(bookRepository.findById(Mockito.<UUID>any())).thenReturn(Optional.empty());
@@ -212,12 +212,29 @@ class BookResourceTest extends JerseyTest {
 		Response response = target(resourceLocation).request()
 				.put(Entity.entity(expectedBook, MediaType.APPLICATION_JSON));
 
+		verify(bookRepository).save(expectedBook);
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		assertNull(response.getMediaType());
 		assertNull(response.getLocation());
-		verify(bookRepository).save(expectedBook);
 		assertFalse(actualBookHolder.isEmpty());
 		assertEquals(expectedBook, actualBookHolder.get(0));
+	}
+
+	@Test
+	@DisplayName("report NO_CONTENT status for PUT request if no entity saved")
+	void givenUpdateBook_whenCorrectRequestAndSaveFailed_thenResponseShouldBeNoContentAndBookNotSaved() {
+		final Book expectedBook = getBook();
+		final String resourceLocation = "/books/" + expectedBook.getId().toString();
+
+		when(bookRepository.save(Mockito.<Book>any())).thenReturn(null);
+
+		Response response = target(resourceLocation).request()
+				.put(Entity.entity(expectedBook, MediaType.APPLICATION_JSON));
+
+		verify(bookRepository).save(expectedBook);
+		assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
+		assertNull(response.getMediaType());
+		assertNull(response.getLocation());
 	}
 
 	@Test
@@ -226,6 +243,8 @@ class BookResourceTest extends JerseyTest {
 		final Book expectedBook = getBook();
 		final String resourceLocation = "/books/" + expectedBook.getId().toString();
 		final List<UUID> actualUUIDHolder = new ArrayList<>();
+
+		when(bookRepository.findById(expectedBook.getId())).thenReturn(Optional.of(expectedBook));
 		doAnswer(new Answer<UUID>() {
 			@Override
 			public UUID answer(InvocationOnMock invocation) {
@@ -236,6 +255,7 @@ class BookResourceTest extends JerseyTest {
 
 		Response response = target(resourceLocation).request().delete();
 
+		verify(bookRepository).findById(expectedBook.getId());
 		verify(bookRepository).deleteById(expectedBook.getId());
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		assertNull(response.getMediaType());
@@ -245,10 +265,12 @@ class BookResourceTest extends JerseyTest {
 	}
 
 	@Test
-	@DisplayName("report OK status for DELETE request and non-existing book should not be deleted")
+	@DisplayName("report NO_CONTENT status for DELETE request and non-existing book should not be deleted")
 	void givenDeleteBook_whenIncorrectRequestAndBookNotFound_thenResponseShouldBeOkAndBookNotDeleted() {
 		final String resourceLocation = "/books/" + WRONG_UUID.toString();
 		final List<UUID> actualUUIDHolder = new ArrayList<>();
+
+		when(bookRepository.findById(WRONG_UUID)).thenReturn(Optional.empty());
 		doAnswer(new Answer<UUID>() {
 			@Override
 			public UUID answer(InvocationOnMock invocation) {
@@ -259,9 +281,10 @@ class BookResourceTest extends JerseyTest {
 
 		Response response = target(resourceLocation).request().delete();
 
-		verify(bookRepository).deleteById(WRONG_UUID);
-		assertFalse(actualUUIDHolder.isEmpty());
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		verify(bookRepository).findById(WRONG_UUID);
+		verify(bookRepository, Mockito.never()).deleteById(WRONG_UUID);
+		assertTrue(actualUUIDHolder.isEmpty());
+		assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
 		assertNull(response.getMediaType());
 		assertNull(response.getLocation());
 	}
@@ -294,6 +317,23 @@ class BookResourceTest extends JerseyTest {
 		assertNotNull(actualBookHolder.get(0).getId());
 		expectedBook.setId(NEWLY_ASSIGNED_UUID);
 		assertEquals(expectedBook, actualBookHolder.get(0));
+	}
+
+	@Test
+	@DisplayName("report NO_CONTENT status for POST request if book can't be added")
+	void givenAddBook_whenCorrectRequestAndBookCantBeAdded_thenResponseShouldBeNoContentAndBookNotAdded() {
+		final String resourceLocation = "/books";
+		Book expectedBook = getBook();
+
+		when(bookRepository.insert(Mockito.<Book>any())).thenReturn(null);
+
+		Response response = target(resourceLocation).request()
+				.post(Entity.entity(expectedBook, MediaType.APPLICATION_JSON));
+
+		verify(bookRepository).insert(Mockito.<Book>any());
+		assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
+		assertNull(response.getMediaType());
+		assertNull(response.getLocation());
 	}
 
 }
