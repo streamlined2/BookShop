@@ -1,4 +1,4 @@
-package com.streamlined.bookshop.model;
+package com.streamlined.bookshop.model.book;
 
 public record Cover(Type type, Surface surface) {
 	public enum Type {

@@ -4,7 +4,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import com.streamlined.bookshop.model.BookDto;
+
+import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.service.eventconsumption.QueryRequestEvent;
 
 public record QueryResultEvent(UUID requestId, List<BookDto> bookList, Instant instant, OperationStatus operationStatus)

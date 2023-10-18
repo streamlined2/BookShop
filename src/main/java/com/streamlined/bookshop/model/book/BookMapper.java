@@ -1,6 +1,8 @@
-package com.streamlined.bookshop.model;
+package com.streamlined.bookshop.model.book;
 
 import org.springframework.stereotype.Component;
+
+import com.streamlined.bookshop.model.Mapper;
 
 @Component
 public class BookMapper implements Mapper<Book, BookDto> {

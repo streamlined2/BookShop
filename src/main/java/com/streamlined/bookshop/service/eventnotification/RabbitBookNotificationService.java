@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.streamlined.bookshop.config.messagebroker.outcomingevents.ModificationStatusRabbitQueue;
 import com.streamlined.bookshop.config.messagebroker.outcomingevents.QueryResultRabbitQueue;
-import com.streamlined.bookshop.model.BookDto;
+import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.service.ModifyingOperationKind;
 
 import lombok.RequiredArgsConstructor;

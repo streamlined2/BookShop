@@ -1,4 +1,4 @@
-package com.streamlined.bookshop.model;
+package com.streamlined.bookshop.model.book;
 
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Document(collection = "books")
 @Data
@@ -28,16 +29,19 @@ public class Book implements Comparable<Book> {
 			.comparing(Book::getAuthor).thenComparing(Book::getTitle).thenComparing(Book::getPublishDate);
 
 	@Id
-	// @UuidGenerator
+	@NonNull
 	@EqualsAndHashCode.Include
 	private UUID id;
 
+	@NonNull
 	@Indexed
 	private String author;
 
+	@NonNull
 	@Indexed
 	private String title;
 
+	@NonNull
 	@Indexed(unique = true)
 	private String isbn;
 

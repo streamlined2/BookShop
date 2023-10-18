@@ -1,4 +1,4 @@
-package com.streamlined.bookshop.model;
+package com.streamlined.bookshop.model.book;
 
 public enum Size {
 	FOLIO, QUARTO, OCTAVO, DUODECIMO

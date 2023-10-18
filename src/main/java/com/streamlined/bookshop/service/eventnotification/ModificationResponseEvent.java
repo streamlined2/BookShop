@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.streamlined.bookshop.model.BookDto;
+import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.service.ModifyingOperationKind;
 import com.streamlined.bookshop.service.eventconsumption.QueryRequestEvent;
 

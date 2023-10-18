@@ -27,12 +27,12 @@ import com.streamlined.bookshop.config.database.MongoDBBeforeConvertCallbackComp
 import com.streamlined.bookshop.dao.BookRepository;
 import com.streamlined.bookshop.exception.BookAlreadyAddedMapper;
 import com.streamlined.bookshop.exception.NoBookFoundMapper;
-import com.streamlined.bookshop.model.Book;
-import com.streamlined.bookshop.model.BookDto;
-import com.streamlined.bookshop.model.BookMapper;
-import com.streamlined.bookshop.model.Cover;
-import com.streamlined.bookshop.model.Genre;
-import com.streamlined.bookshop.model.Size;
+import com.streamlined.bookshop.model.book.Book;
+import com.streamlined.bookshop.model.book.BookDto;
+import com.streamlined.bookshop.model.book.BookMapper;
+import com.streamlined.bookshop.model.book.Cover;
+import com.streamlined.bookshop.model.book.Genre;
+import com.streamlined.bookshop.model.book.Size;
 import com.streamlined.bookshop.service.book.BookService;
 import com.streamlined.bookshop.service.book.DefaultBookService;
 

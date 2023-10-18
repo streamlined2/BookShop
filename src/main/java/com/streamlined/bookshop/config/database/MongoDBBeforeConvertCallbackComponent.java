@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.stereotype.Component;
 
-import com.streamlined.bookshop.model.Book;
+import com.streamlined.bookshop.model.book.Book;
 
 @Component
 public class MongoDBBeforeConvertCallbackComponent implements BeforeConvertCallback<Book> {

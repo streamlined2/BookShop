@@ -12,10 +12,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.streamlined.bookshop.dao.BookRepository;
-import com.streamlined.bookshop.model.Book;
-import com.streamlined.bookshop.model.Cover;
-import com.streamlined.bookshop.model.Genre;
-import com.streamlined.bookshop.model.Size;
+import com.streamlined.bookshop.model.book.Book;
+import com.streamlined.bookshop.model.book.Cover;
+import com.streamlined.bookshop.model.book.Genre;
+import com.streamlined.bookshop.model.book.Size;
 
 import lombok.RequiredArgsConstructor;
 

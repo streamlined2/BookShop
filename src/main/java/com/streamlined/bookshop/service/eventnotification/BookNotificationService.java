@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.streamlined.bookshop.model.BookDto;
+import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.service.ModifyingOperationKind;
 
 public interface BookNotificationService {

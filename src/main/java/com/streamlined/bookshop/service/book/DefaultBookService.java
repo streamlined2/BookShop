@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.streamlined.bookshop.dao.BookRepository;
-import com.streamlined.bookshop.model.Book;
-import com.streamlined.bookshop.model.BookDto;
-import com.streamlined.bookshop.model.BookMapper;
+import com.streamlined.bookshop.model.book.Book;
+import com.streamlined.bookshop.model.book.BookDto;
+import com.streamlined.bookshop.model.book.BookMapper;
 
 import lombok.RequiredArgsConstructor;
 

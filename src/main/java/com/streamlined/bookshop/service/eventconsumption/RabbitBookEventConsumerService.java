@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.streamlined.bookshop.config.messagebroker.incomingevents.ModificationRequestRabbitQueue;
 import com.streamlined.bookshop.config.messagebroker.incomingevents.QueryRequestRabbitQueue;
 import com.streamlined.bookshop.driver.ConsumerException;
-import com.streamlined.bookshop.model.BookDto;
+import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.service.ModifyingOperationKind;
 import com.streamlined.bookshop.service.book.BookService;
 import com.streamlined.bookshop.service.eventnotification.BookNotificationService;
