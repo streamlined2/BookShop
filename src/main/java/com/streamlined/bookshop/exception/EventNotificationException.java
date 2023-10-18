@@ -1,4 +1,4 @@
-package com.streamlined.bookshop.service.eventnotification;
+package com.streamlined.bookshop.exception;
 
 public class EventNotificationException extends RuntimeException {
 

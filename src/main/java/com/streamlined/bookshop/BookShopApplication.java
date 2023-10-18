@@ -1,5 +1,7 @@
 package com.streamlined.bookshop;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +14,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.streamlined.bookshop.dao.BookRepository;
+import com.streamlined.bookshop.dao.InventoryRepository;
 import com.streamlined.bookshop.model.book.Book;
 import com.streamlined.bookshop.model.book.Cover;
 import com.streamlined.bookshop.model.book.Genre;
 import com.streamlined.bookshop.model.book.Size;
+import com.streamlined.bookshop.model.inventory.Inventory;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class BookShopApplication implements CommandLineRunner {
 
 	private final BookRepository bookRepository;
+	private final InventoryRepository inventoryRepository;
 
 	public static void main(String[] args) {
 		SpringApplication.run(BookShopApplication.class, args);
@@ -33,7 +38,11 @@ public class BookShopApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
+		initializeBooks();
+		initializeInventories();
+	}
 
+	private void initializeBooks() {
 		final List<Book> books = new ArrayList<>(List.of(
 				Book.builder().id(UUID.nameUUIDFromBytes("1".getBytes())).author("Jack Peterson")
 						.title("Tales of sorcerer").isbn("12345").publishDate(LocalDate.of(2000, 1, 1))
@@ -51,6 +60,23 @@ public class BookShopApplication implements CommandLineRunner {
 		bookRepository.deleteAll();
 
 		bookRepository.saveAll(books);
+	}
+
+	private void initializeInventories() {
+		List<Inventory> inventories = new ArrayList<>(List.of(
+				Inventory.builder().id(UUID.nameUUIDFromBytes("1".getBytes()))
+						.bookId(UUID.nameUUIDFromBytes("1".getBytes())).amount(BigInteger.valueOf(10))
+						.price(BigDecimal.valueOf(100.00)).build(),
+				Inventory.builder().id(UUID.nameUUIDFromBytes("2".getBytes()))
+						.bookId(UUID.nameUUIDFromBytes("2".getBytes())).amount(BigInteger.valueOf(20))
+						.price(BigDecimal.valueOf(200.00)).build(),
+				Inventory.builder().id(UUID.nameUUIDFromBytes("3".getBytes()))
+						.bookId(UUID.nameUUIDFromBytes("3".getBytes())).amount(BigInteger.valueOf(30))
+						.price(BigDecimal.valueOf(300.00)).build()));
+
+		inventoryRepository.deleteAll();
+
+		inventoryRepository.saveAll(inventories);
 	}
 
 }

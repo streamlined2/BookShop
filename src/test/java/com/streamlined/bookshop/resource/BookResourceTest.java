@@ -23,7 +23,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import com.streamlined.bookshop.config.database.MongoDBBeforeConvertCallbackComponent;
+import com.streamlined.bookshop.config.database.MongoDBBookBeforeConvertCallbackComponent;
 import com.streamlined.bookshop.dao.BookRepository;
 import com.streamlined.bookshop.exception.BookAlreadyAddedMapper;
 import com.streamlined.bookshop.exception.NoBookFoundMapper;
@@ -58,7 +58,7 @@ class BookResourceTest extends JerseyTest {
 		bookRepository = mock(BookRepository.class);
 		bookMapper = new BookMapper();
 		bookService = new DefaultBookService(bookRepository, bookMapper);
-		appContext = new AnnotationConfigApplicationContext(MongoDBBeforeConvertCallbackComponent.class,
+		appContext = new AnnotationConfigApplicationContext(MongoDBBookBeforeConvertCallbackComponent.class,
 				BookMapper.class);
 		appContext.registerBean(BookService.class, () -> bookService);
 

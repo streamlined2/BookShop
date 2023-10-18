@@ -1,9 +1,10 @@
 package com.streamlined.bookshop.resource;
 
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.streamlined.bookshop.Utilities;
 import com.streamlined.bookshop.exception.NoBookFoundException;
 import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.service.book.BookService;
@@ -65,12 +66,9 @@ public class BookResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response addBook(BookDto bookDto, @Context UriInfo uriInfo) {
 		var newBook = bookService.addBook(bookDto);
-		return newBook.isPresent() ? Response.created(getResourceLocation(uriInfo, newBook.get())).build()
+		return newBook.isPresent()
+				? Response.created(Utilities.getResourceLocation(uriInfo, newBook.get().id())).build()
 				: Response.noContent().build();
-	}
-
-	private URI getResourceLocation(UriInfo uriInfo, BookDto book) {
-		return URI.create("%s/%s".formatted(uriInfo.getAbsolutePath().toString(), book.id().toString()));
 	}
 
 }

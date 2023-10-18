@@ -5,13 +5,13 @@ import java.util.UUID;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.stereotype.Component;
 
-import com.streamlined.bookshop.model.book.Book;
+import com.streamlined.bookshop.model.inventory.Inventory;
 
 @Component
-public class MongoDBBeforeConvertCallbackComponent implements BeforeConvertCallback<Book> {
+public class MongoDBInventoryBeforeConvertCallbackComponent implements BeforeConvertCallback<Inventory> {
 
 	@Override
-	public Book onBeforeConvert(Book entity, String collection) {
+	public Inventory onBeforeConvert(Inventory entity, String collection) {
 		if (entity.getId() == null) {
 			entity.setId(UUID.randomUUID());
 		}

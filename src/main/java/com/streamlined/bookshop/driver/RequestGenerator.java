@@ -17,20 +17,21 @@ import com.streamlined.bookshop.config.messagebroker.incomingevents.Modification
 import com.streamlined.bookshop.config.messagebroker.incomingevents.QueryRequestRabbitQueue;
 import com.streamlined.bookshop.config.messagebroker.outcomingevents.ModificationStatusRabbitQueue;
 import com.streamlined.bookshop.config.messagebroker.outcomingevents.QueryResultRabbitQueue;
+import com.streamlined.bookshop.exception.ConsumerException;
+import com.streamlined.bookshop.exception.EventNotificationException;
 import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.model.book.BookMapper;
 import com.streamlined.bookshop.service.ModifyingOperationKind;
 import com.streamlined.bookshop.service.QueryingOperationKind;
 import com.streamlined.bookshop.service.eventconsumption.ModificationRequestEvent;
 import com.streamlined.bookshop.service.eventconsumption.QueryRequestEvent;
-import com.streamlined.bookshop.service.eventnotification.EventNotificationException;
 import com.streamlined.bookshop.service.eventnotification.ModificationResponseEvent;
 import com.streamlined.bookshop.service.eventnotification.QueryResultEvent;
 import com.streamlined.bookshop.service.eventnotification.ResponseEvent;
 
 import lombok.RequiredArgsConstructor;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 public class RequestGenerator implements MessageConsumer {
 
