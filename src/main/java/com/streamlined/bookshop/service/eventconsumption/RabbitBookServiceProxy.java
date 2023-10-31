@@ -8,31 +8,35 @@ import java.util.UUID;
 
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.streamlined.bookshop.config.messagebroker.incomingevents.ModificationRequestRabbitQueue;
 import com.streamlined.bookshop.config.messagebroker.incomingevents.QueryRequestRabbitQueue;
+import com.streamlined.bookshop.config.messagebroker.outcomingevents.ModificationStatusRabbitQueue;
+import com.streamlined.bookshop.config.messagebroker.outcomingevents.QueryResultRabbitQueue;
 import com.streamlined.bookshop.exception.ConsumerException;
+import com.streamlined.bookshop.exception.EventNotificationException;
 import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.service.ModifyingOperationKind;
 import com.streamlined.bookshop.service.book.BookService;
-import com.streamlined.bookshop.service.eventnotification.BookNotificationService;
+import com.streamlined.bookshop.service.eventnotification.ModificationResponseEvent;
 import com.streamlined.bookshop.service.eventnotification.OperationStatus;
+import com.streamlined.bookshop.service.eventnotification.QueryResultEvent;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class RabbitBookEventConsumerService implements BookEventConsumerService {
+public class RabbitBookServiceProxy {
 
 	private final BookService bookService;
 	private final ObjectMapper objectMapper;
-	private final List<BookNotificationService> notificationServiceList;
+	private final RabbitTemplate rabbitTemplate;
 
 	@RabbitListener(queues = QueryRequestRabbitQueue.QUEUE_NAME)
-	@Override
 	public void consumeQueryRequest(Message message) {
 		try {
 			String body = new String(message.getBody());
@@ -48,25 +52,32 @@ public class RabbitBookEventConsumerService implements BookEventConsumerService 
 		switch (event.kind()) {
 		case QUERY_ALL -> {
 			List<BookDto> bookList = bookService.getAllBooks();
-			publishQueryResultMessage(event.requestId(), bookList);
+			publishQueryResult(event.requestId(), bookList, Instant.now(), OperationStatus.SUCCESS);
 		}
 		case QUERY_ONE_BY_ID -> {
 			UUID id = UUID.fromString((String) event.params()[0]);
 			Optional<BookDto> dto = bookService.getBook(id);
-			dto.ifPresentOrElse(book -> publishQueryResultMessage(event.requestId(), List.of(book)),
-					() -> publishQueryResultMessage(event.requestId(), List.of()));
+			dto.ifPresentOrElse(
+					book -> publishQueryResult(event.requestId(), List.of(book), Instant.now(),
+							OperationStatus.SUCCESS),
+					() -> publishQueryResult(event.requestId(), List.of(), Instant.now(), OperationStatus.SUCCESS));
 		}
 		default -> throw new ConsumerException("wrong operation kind for the event %s".formatted(event.toString()));
 		}
 	}
 
-	private void publishQueryResultMessage(UUID requestId, List<BookDto> bookList) {
-		notificationServiceList.forEach(
-				service -> service.publishQueryResult(requestId, bookList, Instant.now(), OperationStatus.SUCCESS));
+	private void publishQueryResult(UUID requestId, List<BookDto> bookList, Instant instant, OperationStatus status) {
+		try {
+			QueryResultEvent event = new QueryResultEvent(requestId, bookList, instant, status);
+			String content = objectMapper.writeValueAsString(event);
+			Message message = new Message(content.getBytes());
+			rabbitTemplate.send(QueryResultRabbitQueue.QUEUE_NAME, message);
+		} catch (IOException e) {
+			throw new EventNotificationException("cannot convert query result message to publish", e);
+		}
 	}
 
 	@RabbitListener(queues = ModificationRequestRabbitQueue.QUEUE_NAME)
-	@Override
 	public void consumeModificationRequest(Message message) {
 		try {
 			String body = new String(message.getBody());
@@ -86,29 +97,36 @@ public class RabbitBookEventConsumerService implements BookEventConsumerService 
 			BookDto book = objectMapper.convertValue((event.params()[0]), BookDto.class);
 			UUID id = UUID.fromString((String) event.params()[1]);
 			var updatedBook = bookService.updateBook(book, id);
-			publishModificationStatusMessage(requestId, ModifyingOperationKind.UPDATE, updatedBook, Instant.now(),
+			publishModificationStatus(requestId, ModifyingOperationKind.UPDATE, updatedBook, Instant.now(),
 					OperationStatus.SUCCESS);
 		}
 		case DELETE -> {
 			UUID id = UUID.fromString((String) event.params()[0]);
 			var book = bookService.deleteBook(id);
-			publishModificationStatusMessage(requestId, ModifyingOperationKind.DELETE, book, Instant.now(),
+			publishModificationStatus(requestId, ModifyingOperationKind.DELETE, book, Instant.now(),
 					OperationStatus.SUCCESS);
 		}
 		case ADD -> {
 			BookDto book = objectMapper.convertValue((event.params()[0]), BookDto.class);
 			var newBook = bookService.addBook(book);
-			publishModificationStatusMessage(requestId, ModifyingOperationKind.ADD, newBook, Instant.now(),
+			publishModificationStatus(requestId, ModifyingOperationKind.ADD, newBook, Instant.now(),
 					OperationStatus.SUCCESS);
 		}
 		default -> throw new ConsumerException("wrong operation kind for the event %s".formatted(event.toString()));
 		}
 	}
 
-	private void publishModificationStatusMessage(UUID requestId, ModifyingOperationKind operation,
-			Optional<BookDto> book, Instant instant, OperationStatus status) {
-		notificationServiceList
-				.forEach(service -> service.publishModificationStatus(requestId, operation, book, instant, status));
+	private void publishModificationStatus(UUID requestId, ModifyingOperationKind operation, Optional<BookDto> book,
+			Instant instant, OperationStatus status) {
+		try {
+			ModificationResponseEvent event = new ModificationResponseEvent(requestId, operation, book.orElse(null),
+					instant, status);
+			String content = objectMapper.writeValueAsString(event);
+			Message message = new Message(content.getBytes());
+			rabbitTemplate.send(ModificationStatusRabbitQueue.QUEUE_NAME, message);
+		} catch (IOException e) {
+			throw new EventNotificationException("cannot convert modification status message to publish", e);
+		}
 	}
 
 }

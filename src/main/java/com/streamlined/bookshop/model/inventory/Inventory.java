@@ -7,6 +7,8 @@ import java.util.UUID;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -32,9 +34,11 @@ public class Inventory {
 	private UUID bookId;
 
 	@NonNull
+	@Field(name = "amount", targetType = FieldType.INT64)
 	private BigInteger amount;
 
 	@NonNull
+	@Field(name = "price", targetType = FieldType.DECIMAL128)
 	private BigDecimal price;
 
 	public void addAmount(BigInteger extraAmount) {

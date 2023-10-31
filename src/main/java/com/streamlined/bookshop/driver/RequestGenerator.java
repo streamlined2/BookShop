@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 
 //@Component
 @RequiredArgsConstructor
-public class RequestGenerator implements MessageConsumer {
+public class RequestGenerator {
 
 	private final RabbitTemplate rabbitTemplate;
 	private final ObjectMapper objectMapper;
@@ -86,7 +86,6 @@ public class RequestGenerator implements MessageConsumer {
 	}
 
 	@RabbitListener(queues = QueryResultRabbitQueue.QUEUE_NAME)
-	@Override
 	public void consumeQueryResultMessage(Message message) {
 		try {
 			String body = new String(message.getBody());
@@ -99,7 +98,6 @@ public class RequestGenerator implements MessageConsumer {
 	}
 
 	@RabbitListener(queues = ModificationStatusRabbitQueue.QUEUE_NAME)
-	@Override
 	public void consumeModificationStatusMessage(Message message) {
 		try {
 			String body = new String(message.getBody());

@@ -8,6 +8,9 @@ import java.util.UUID;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.Language;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -35,28 +38,39 @@ public class Book implements Comparable<Book> {
 
 	@NonNull
 	@Indexed
+	@Field(name = "author", targetType = FieldType.STRING)
 	private String author;
 
 	@NonNull
 	@Indexed
+	@Field(name = "title", targetType = FieldType.STRING)
 	private String title;
 
 	@NonNull
 	@Indexed(unique = true)
+	@Field(name = "isbn", targetType = FieldType.STRING)
 	private String isbn;
 
+	@Field(name = "publish_date", targetType = FieldType.DATE_TIME)
 	private LocalDate publishDate;
 
+	@Field(name = "genre", targetType = FieldType.OBJECT_ID)
 	private Genre genre;
 
+	@Field(name = "country", targetType = FieldType.STRING)
 	private String country;
 
+	@Field(name = "language", targetType = FieldType.STRING)
+	@Language
 	private String language;
 
+	@Field(name = "pageCount", targetType = FieldType.INT32)
 	private int pageCount;
 
+	@Field(name = "size")
 	private Size size;
 
+	@Field(name = "cover")
 	private Cover cover;
 
 	@Override

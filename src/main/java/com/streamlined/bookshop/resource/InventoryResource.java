@@ -15,6 +15,7 @@ import com.streamlined.bookshop.service.inventory.InventoryService;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -57,25 +58,22 @@ public class InventoryResource {
 		return updatedInventory.isPresent() ? Response.ok().build() : Response.noContent().build();
 	}
 
-	@PUT
+	@PATCH
 	@Path("/{id}/replenish/{amount}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response replenishInventory(@PathParam("id") UUID id, @PathParam("amount") BigInteger amount) {
 		var updatedInventory = inventoryService.replenishInventory(id, amount);
 		return updatedInventory.isPresent() ? Response.ok().build() : Response.noContent().build();
 	}
 
-	@PUT
+	@PATCH
 	@Path("/{id}/sell/{amount}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response sellInventory(@PathParam("id") UUID id, @PathParam("amount") BigInteger amount) {
 		var updatedInventory = inventoryService.sellInventory(id, amount);
 		return updatedInventory.isPresent() ? Response.ok().build() : Response.noContent().build();
 	}
 
-	@PUT
+	@PATCH
 	@Path("/{id}/assignprice/{price}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response assignPrice(@PathParam("id") UUID id, @PathParam("price") BigDecimal price) {
 		var updatedInventory = inventoryService.assignPrice(id, price);
 		return updatedInventory.isPresent() ? Response.ok().build() : Response.noContent().build();
@@ -83,7 +81,6 @@ public class InventoryResource {
 
 	@DELETE
 	@Path("/{id}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteInventory(@PathParam("id") UUID id) {
 		var deletedInventory = inventoryService.deleteInventory(id);
 		return deletedInventory.isPresent() ? Response.ok().build() : Response.noContent().build();
