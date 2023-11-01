@@ -31,7 +31,7 @@ import com.streamlined.bookshop.service.eventnotification.ResponseEvent;
 
 import lombok.RequiredArgsConstructor;
 
-//@Component
+@Component
 @RequiredArgsConstructor
 public class RequestGenerator {
 

@@ -42,34 +42,30 @@ public class RabbitBookServiceProxy {
 			String body = new String(message.getBody());
 			QueryRequestEvent event = objectMapper.readValue(body, new TypeReference<QueryRequestEvent>() {
 			});
-			dispatchQueryRequest(event);
+			List<BookDto> queryResult = dispatchQueryRequest(event);
+			publishQueryResult(event, queryResult, Instant.now(), OperationStatus.SUCCESS);
 		} catch (IOException e) {
 			throw new ConsumerException("query request message cannot be consumed", e);
 		}
 	}
 
-	private void dispatchQueryRequest(QueryRequestEvent event) {
-		switch (event.kind()) {
-		case QUERY_ALL -> {
-			List<BookDto> bookList = bookService.getAllBooks();
-			publishQueryResult(event.requestId(), bookList, Instant.now(), OperationStatus.SUCCESS);
-		}
+	private List<BookDto> dispatchQueryRequest(QueryRequestEvent event) {
+		return switch (event.kind()) {
+		case QUERY_ALL -> bookService.getAllBooks();
 		case QUERY_ONE_BY_ID -> {
 			UUID id = UUID.fromString((String) event.params()[0]);
 			Optional<BookDto> dto = bookService.getBook(id);
-			dto.ifPresentOrElse(
-					book -> publishQueryResult(event.requestId(), List.of(book), Instant.now(),
-							OperationStatus.SUCCESS),
-					() -> publishQueryResult(event.requestId(), List.of(), Instant.now(), OperationStatus.SUCCESS));
+			yield dto.map(List::of).orElse(List.of());
 		}
 		default -> throw new ConsumerException("wrong operation kind for the event %s".formatted(event.toString()));
-		}
+		};
 	}
 
-	private void publishQueryResult(UUID requestId, List<BookDto> bookList, Instant instant, OperationStatus status) {
+	private void publishQueryResult(QueryRequestEvent requestEvent, List<BookDto> bookList, Instant instant,
+			OperationStatus status) {
 		try {
-			QueryResultEvent event = new QueryResultEvent(requestId, bookList, instant, status);
-			String content = objectMapper.writeValueAsString(event);
+			QueryResultEvent resultEvent = new QueryResultEvent(requestEvent.requestId(), bookList, instant, status);
+			String content = objectMapper.writeValueAsString(resultEvent);
 			Message message = new Message(content.getBytes());
 			rabbitTemplate.send(QueryResultRabbitQueue.QUEUE_NAME, message);
 		} catch (IOException e) {
@@ -84,44 +80,38 @@ public class RabbitBookServiceProxy {
 			ModificationRequestEvent event = objectMapper.readValue(body,
 					new TypeReference<ModificationRequestEvent>() {
 					});
-			dispatchModificationRequest(event);
+			Optional<BookDto> updatedBook = dispatchModificationRequest(event);
+			publishModificationStatus(event, updatedBook, Instant.now(), OperationStatus.SUCCESS);
 		} catch (IOException e) {
 			throw new ConsumerException("modification status message cannot be consumed", e);
 		}
 	}
 
-	private void dispatchModificationRequest(ModificationRequestEvent event) {
-		UUID requestId = event.requestId();
-		switch (event.kind()) {
+	private Optional<BookDto> dispatchModificationRequest(ModificationRequestEvent event) {
+		return switch (event.kind()) {
 		case UPDATE -> {
 			BookDto book = objectMapper.convertValue((event.params()[0]), BookDto.class);
 			UUID id = UUID.fromString((String) event.params()[1]);
-			var updatedBook = bookService.updateBook(book, id);
-			publishModificationStatus(requestId, ModifyingOperationKind.UPDATE, updatedBook, Instant.now(),
-					OperationStatus.SUCCESS);
+			yield bookService.updateBook(book, id);
 		}
 		case DELETE -> {
 			UUID id = UUID.fromString((String) event.params()[0]);
-			var book = bookService.deleteBook(id);
-			publishModificationStatus(requestId, ModifyingOperationKind.DELETE, book, Instant.now(),
-					OperationStatus.SUCCESS);
+			yield bookService.deleteBook(id);
 		}
 		case ADD -> {
 			BookDto book = objectMapper.convertValue((event.params()[0]), BookDto.class);
-			var newBook = bookService.addBook(book);
-			publishModificationStatus(requestId, ModifyingOperationKind.ADD, newBook, Instant.now(),
-					OperationStatus.SUCCESS);
+			yield bookService.addBook(book);
 		}
 		default -> throw new ConsumerException("wrong operation kind for the event %s".formatted(event.toString()));
-		}
+		};
 	}
 
-	private void publishModificationStatus(UUID requestId, ModifyingOperationKind operation, Optional<BookDto> book,
+	private void publishModificationStatus(ModificationRequestEvent requestEvent, Optional<BookDto> book,
 			Instant instant, OperationStatus status) {
 		try {
-			ModificationResponseEvent event = new ModificationResponseEvent(requestId, operation, book.orElse(null),
-					instant, status);
-			String content = objectMapper.writeValueAsString(event);
+			ModificationResponseEvent responseEvent = new ModificationResponseEvent(requestEvent.requestId(),
+					requestEvent.kind(), book.orElse(null), instant, status);
+			String content = objectMapper.writeValueAsString(responseEvent);
 			Message message = new Message(content.getBytes());
 			rabbitTemplate.send(ModificationStatusRabbitQueue.QUEUE_NAME, message);
 		} catch (IOException e) {
