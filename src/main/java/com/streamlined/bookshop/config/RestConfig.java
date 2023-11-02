@@ -4,7 +4,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.context.annotation.Configuration;
 
 import com.streamlined.bookshop.exception.BookAlreadyAddedMapper;
-import com.streamlined.bookshop.exception.ConsumerMapper;
+import com.streamlined.bookshop.exception.RequestProcessingMapper;
 import com.streamlined.bookshop.exception.EventNotificationMapper;
 import com.streamlined.bookshop.exception.NoBookFoundMapper;
 import com.streamlined.bookshop.exception.NoInventoryFoundMapper;
@@ -22,7 +22,7 @@ public class RestConfig extends ResourceConfig {
 		register(InventoryResource.class);
 		register(BookAlreadyAddedMapper.class);
 		register(NoBookFoundMapper.class);
-		register(ConsumerMapper.class);
+		register(RequestProcessingMapper.class);
 		register(EventNotificationMapper.class);
 		register(NoInventoryFoundMapper.class);
 	}

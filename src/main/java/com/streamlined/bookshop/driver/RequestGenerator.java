@@ -17,7 +17,7 @@ import com.streamlined.bookshop.config.messagebroker.incomingevents.Modification
 import com.streamlined.bookshop.config.messagebroker.incomingevents.QueryRequestRabbitQueue;
 import com.streamlined.bookshop.config.messagebroker.outcomingevents.ModificationStatusRabbitQueue;
 import com.streamlined.bookshop.config.messagebroker.outcomingevents.QueryResultRabbitQueue;
-import com.streamlined.bookshop.exception.ConsumerException;
+import com.streamlined.bookshop.exception.RequestProcessingException;
 import com.streamlined.bookshop.exception.EventNotificationException;
 import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.model.book.BookMapper;
@@ -39,7 +39,7 @@ public class RequestGenerator {
 	private final ObjectMapper objectMapper;
 	private final BookMapper bookMapper;
 
-	private static final int FIXED_RATE_SECONDS = 5;
+	private static final int FIXED_RATE_SECONDS = 10;
 	private static final int QUEUE_INITIAL_CAPACITY = 1000;
 	private final BlockingQueue<ResponseEvent> responseQueue = new ArrayBlockingQueue<>(QUEUE_INITIAL_CAPACITY);
 
@@ -93,7 +93,7 @@ public class RequestGenerator {
 			responseQueue.add(event);
 			System.out.println(event);
 		} catch (IOException e) {
-			throw new ConsumerException("query result message cannot be consumed", e);
+			throw new RequestProcessingException("query result message cannot be consumed", e);
 		}
 	}
 
@@ -105,7 +105,7 @@ public class RequestGenerator {
 			responseQueue.add(event);
 			System.out.println(event);
 		} catch (IOException e) {
-			throw new ConsumerException("modification status message cannot be consumed", e);
+			throw new RequestProcessingException("modification status message cannot be consumed", e);
 		}
 	}
 

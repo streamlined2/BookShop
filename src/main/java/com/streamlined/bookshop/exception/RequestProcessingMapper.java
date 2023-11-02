@@ -5,10 +5,10 @@ import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
 @Provider
-public class ConsumerMapper implements ExceptionMapper<ConsumerException> {
+public class RequestProcessingMapper implements ExceptionMapper<RequestProcessingException> {
 
 	@Override
-	public Response toResponse(ConsumerException exception) {
+	public Response toResponse(RequestProcessingException exception) {
 		return Response.status(Response.Status.BAD_REQUEST).build();
 	}
 
