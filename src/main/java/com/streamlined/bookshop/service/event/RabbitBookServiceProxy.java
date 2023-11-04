@@ -1,26 +1,25 @@
-package com.streamlined.bookshop.service.eventconsumption;
+package com.streamlined.bookshop.service.event;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
-import com.fasterxml.jackson.core.type.TypeReference;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.streamlined.bookshop.config.messagebroker.incomingevents.ModificationRequestRabbitQueue;
-import com.streamlined.bookshop.config.messagebroker.incomingevents.QueryRequestRabbitQueue;
-import com.streamlined.bookshop.config.messagebroker.outcomingevents.ModificationStatusRabbitQueue;
-import com.streamlined.bookshop.config.messagebroker.outcomingevents.QueryResultRabbitQueue;
 import com.streamlined.bookshop.exception.RequestProcessingException;
 import com.streamlined.bookshop.exception.OperationFailedException;
 import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.service.book.BookService;
-import com.streamlined.bookshop.service.eventnotification.ModificationResponseEvent;
-import com.streamlined.bookshop.service.eventnotification.OperationStatus;
-import com.streamlined.bookshop.service.eventnotification.QueryResultEvent;
+import com.streamlined.bookshop.service.event.queue.ModificationRequestRabbitQueue;
+import com.streamlined.bookshop.service.event.queue.ModificationStatusRabbitQueue;
+import com.streamlined.bookshop.service.event.queue.QueryRequestRabbitQueue;
+import com.streamlined.bookshop.service.event.queue.QueryResultRabbitQueue;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,8 +35,8 @@ public class RabbitBookServiceProxy {
 	public void processQueryRequest(Message message) {
 		try {
 			String body = new String(message.getBody());
-			QueryRequestEvent event = objectMapper.readValue(body, new TypeReference<QueryRequestEvent>() {
-			});
+			Class<? extends QueryRequestEvent> valueType = getMessageType(message);
+			QueryRequestEvent event = objectMapper.readValue(body, valueType);
 			executeQueryAndPublishResult(event);
 		} catch (Exception e) {
 			throw new RequestProcessingException("query request message cannot be processed", e);
@@ -55,21 +54,19 @@ public class RabbitBookServiceProxy {
 
 	private List<BookDto> dispatchExecuteQueryRequest(QueryRequestEvent event) {
 		try {
-			return event.kind().executeQuery(bookService, event.params());
+			return event.executeQuery(bookService);
 		} catch (Exception e) {
-			throw new OperationFailedException("operation %s raised exception".formatted(event.kind().toString()), e);
+			throw new OperationFailedException("operation %s raised exception".formatted(event.toString()), e);
 		}
 	}
 
 	private void publishQueryResult(QueryRequestEvent requestEvent, List<BookDto> bookList, Instant instant,
 			OperationStatus status) {
 		try {
-			QueryResultEvent resultEvent = new QueryResultEvent(requestEvent.requestId(), bookList, instant, status);
-			String content = objectMapper.writeValueAsString(resultEvent);
-			Message message = new Message(content.getBytes());
-			rabbitTemplate.send(QueryResultRabbitQueue.QUEUE_NAME, message);
+			QueryResultEvent resultEvent = new QueryResultEvent(requestEvent.requestId(), instant, bookList, status);
+			rabbitTemplate.send(QueryResultRabbitQueue.QUEUE_NAME, getMessage(resultEvent));
 		} catch (IOException e) {
-			throw new RequestProcessingException("cannot convert query result message to publish", e);
+			throw new RequestProcessingException("cannot publish query result message", e);
 		}
 	}
 
@@ -77,13 +74,16 @@ public class RabbitBookServiceProxy {
 	public void processModificationRequest(Message message) {
 		try {
 			String body = new String(message.getBody());
-			ModificationRequestEvent event = objectMapper.readValue(body,
-					new TypeReference<ModificationRequestEvent>() {
-					});
+			Class<? extends ModificationRequestEvent> valueType = getMessageType(message);
+			ModificationRequestEvent event = objectMapper.readValue(body, valueType);
 			executeModificationAndPublishStatus(event);
 		} catch (Exception e) {
 			throw new RequestProcessingException("modification status message cannot be processed", e);
 		}
+	}
+
+	private <T> Class<T> getMessageType(Message message) throws ClassNotFoundException {
+		return (Class<T>) Class.forName(message.getMessageProperties().getType());
 	}
 
 	private void executeModificationAndPublishStatus(ModificationRequestEvent event) {
@@ -97,9 +97,9 @@ public class RabbitBookServiceProxy {
 
 	private Optional<BookDto> dispatchExecuteModificationRequest(ModificationRequestEvent event) {
 		try {
-			return event.kind().executeUpdate(bookService, objectMapper, event.params());
+			return event.executeUpdate(bookService);
 		} catch (Exception e) {
-			throw new OperationFailedException("operation %s raised exception".formatted(event.kind().toString()), e);
+			throw new OperationFailedException("operation %s raised exception".formatted(event.toString()), e);
 		}
 	}
 
@@ -107,13 +107,18 @@ public class RabbitBookServiceProxy {
 			Instant instant, OperationStatus status) {
 		try {
 			ModificationResponseEvent responseEvent = new ModificationResponseEvent(requestEvent.requestId(),
-					requestEvent.kind(), book.orElse(null), instant, status);
-			String content = objectMapper.writeValueAsString(responseEvent);
-			Message message = new Message(content.getBytes());
-			rabbitTemplate.send(ModificationStatusRabbitQueue.QUEUE_NAME, message);
+					book.orElse(null), instant, status);
+			rabbitTemplate.send(ModificationStatusRabbitQueue.QUEUE_NAME, getMessage(responseEvent));
 		} catch (IOException e) {
-			throw new RequestProcessingException("cannot convert modification status message to publish", e);
+			throw new RequestProcessingException("cannot publish modification status message", e);
 		}
+	}
+
+	private Message getMessage(Event event) throws JsonProcessingException {
+		String content = objectMapper.writeValueAsString(event);
+		MessageProperties messageProperties = new MessageProperties();
+		messageProperties.setType(event.getClass().getName());
+		return new Message(content.getBytes(), messageProperties);
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.streamlined.bookshop.config.messagebroker.outcomingevents;
+package com.streamlined.bookshop.service.event.queue;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.stereotype.Component;

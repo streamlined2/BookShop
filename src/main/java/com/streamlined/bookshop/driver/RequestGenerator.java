@@ -1,33 +1,38 @@
 package com.streamlined.bookshop.driver;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.streamlined.bookshop.config.messagebroker.incomingevents.ModificationRequestRabbitQueue;
-import com.streamlined.bookshop.config.messagebroker.incomingevents.QueryRequestRabbitQueue;
-import com.streamlined.bookshop.config.messagebroker.outcomingevents.ModificationStatusRabbitQueue;
-import com.streamlined.bookshop.config.messagebroker.outcomingevents.QueryResultRabbitQueue;
 import com.streamlined.bookshop.exception.RequestProcessingException;
 import com.streamlined.bookshop.exception.EventNotificationException;
 import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.model.book.BookMapper;
-import com.streamlined.bookshop.service.BookModifyingOperationKind;
-import com.streamlined.bookshop.service.BookQueryingOperationKind;
-import com.streamlined.bookshop.service.eventconsumption.ModificationRequestEvent;
-import com.streamlined.bookshop.service.eventconsumption.QueryRequestEvent;
-import com.streamlined.bookshop.service.eventnotification.ModificationResponseEvent;
-import com.streamlined.bookshop.service.eventnotification.QueryResultEvent;
-import com.streamlined.bookshop.service.eventnotification.ResponseEvent;
+import com.streamlined.bookshop.service.event.UpdateRequestEvent;
+import com.streamlined.bookshop.service.event.AddRequestEvent;
+import com.streamlined.bookshop.service.event.DeleteRequestEvent;
+import com.streamlined.bookshop.service.event.Event;
+import com.streamlined.bookshop.service.event.ModificationResponseEvent;
+import com.streamlined.bookshop.service.event.QueryAllRequestEvent;
+import com.streamlined.bookshop.service.event.QueryOneRequestEvent;
+import com.streamlined.bookshop.service.event.QueryResultEvent;
+import com.streamlined.bookshop.service.event.ResponseEvent;
+import com.streamlined.bookshop.service.event.queue.ModificationRequestRabbitQueue;
+import com.streamlined.bookshop.service.event.queue.ModificationStatusRabbitQueue;
+import com.streamlined.bookshop.service.event.queue.QueryRequestRabbitQueue;
+import com.streamlined.bookshop.service.event.queue.QueryResultRabbitQueue;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,50 +44,85 @@ public class RequestGenerator {
 	private final ObjectMapper objectMapper;
 	private final BookMapper bookMapper;
 
+	private static final int INITIAL_DELAY_SECONDS = 1;
 	private static final int FIXED_RATE_SECONDS = 10;
 	private static final int QUEUE_INITIAL_CAPACITY = 1000;
 	private final BlockingQueue<ResponseEvent> responseQueue = new ArrayBlockingQueue<>(QUEUE_INITIAL_CAPACITY);
 
-	@Scheduled(fixedRate = FIXED_RATE_SECONDS, timeUnit = TimeUnit.SECONDS)
+	@Scheduled(initialDelay = INITIAL_DELAY_SECONDS, fixedRate = FIXED_RATE_SECONDS, timeUnit = TimeUnit.SECONDS)
 	public void run() {
-		publishQueryRequestEvent(BookQueryingOperationKind.QUERY_ALL);
+		publishQueryAllRequestEvent();
 		ResponseEvent responseEvent;
 		while ((responseEvent = responseQueue.poll()) != null) {
-			if (responseEvent instanceof QueryResultEvent queryEvent) {
+			if (responseEvent instanceof QueryResultEvent queryEvent && queryEvent.bookList().size() > 1) {
 				for (BookDto book : queryEvent.bookList()) {
-					publishQueryRequestEvent(BookQueryingOperationKind.QUERY_ONE_BY_ID, book.id());
-					publishModificationRequestEvent(BookModifyingOperationKind.UPDATE, book, book.id());
-					publishModificationRequestEvent(BookModifyingOperationKind.DELETE, book.id());
+					publishQueryOneRequestEvent(book.id());
+					publishUpdateRequestEvent(book, book.id());
+					publishDeleteRequestEvent(book.id());
 					var entity = bookMapper.toEntity(book);
 					entity.setId(UUID.randomUUID());
-					publishModificationRequestEvent(BookModifyingOperationKind.ADD, bookMapper.toDto(entity));
+					publishAddRequestEvent(bookMapper.toDto(entity));
 				}
 			}
 		}
+
 	}
 
-	public void publishQueryRequestEvent(BookQueryingOperationKind operationKind, Object... params) {
+	private void publishQueryAllRequestEvent() {
 		try {
 			UUID requestId = UUID.randomUUID();
-			QueryRequestEvent event = new QueryRequestEvent(requestId, operationKind, params);
-			String content = objectMapper.writeValueAsString(event);
-			Message message = new Message(content.getBytes());
-			rabbitTemplate.send(QueryRequestRabbitQueue.QUEUE_NAME, message);
+			QueryAllRequestEvent event = new QueryAllRequestEvent(requestId, Instant.now());
+			rabbitTemplate.send(QueryRequestRabbitQueue.QUEUE_NAME, getMessage(event));
 		} catch (IOException e) {
-			throw new EventNotificationException("cannot convert query request message to publish", e);
+			throw new EventNotificationException("cannot publish query all request message", e);
 		}
 	}
 
-	public void publishModificationRequestEvent(BookModifyingOperationKind operationKind, Object... params) {
+	private void publishQueryOneRequestEvent(UUID bookId) {
 		try {
 			UUID requestId = UUID.randomUUID();
-			ModificationRequestEvent event = new ModificationRequestEvent(requestId, operationKind, params);
-			String content = objectMapper.writeValueAsString(event);
-			Message message = new Message(content.getBytes());
-			rabbitTemplate.send(ModificationRequestRabbitQueue.QUEUE_NAME, message);
+			QueryOneRequestEvent event = new QueryOneRequestEvent(requestId, Instant.now(), bookId);
+			rabbitTemplate.send(QueryRequestRabbitQueue.QUEUE_NAME, getMessage(event));
 		} catch (IOException e) {
-			throw new EventNotificationException("cannot convert modification request message to publish", e);
+			throw new EventNotificationException("cannot publish query one request message", e);
 		}
+	}
+
+	private void publishUpdateRequestEvent(BookDto book, UUID bookId) {
+		try {
+			UUID requestId = UUID.randomUUID();
+			UpdateRequestEvent event = new UpdateRequestEvent(requestId, Instant.now(), book, bookId);
+			rabbitTemplate.send(ModificationRequestRabbitQueue.QUEUE_NAME, getMessage(event));
+		} catch (IOException e) {
+			throw new EventNotificationException("cannot publish update request message", e);
+		}
+	}
+
+	private void publishDeleteRequestEvent(UUID bookId) {
+		try {
+			UUID requestId = UUID.randomUUID();
+			DeleteRequestEvent event = new DeleteRequestEvent(requestId, Instant.now(), bookId);
+			rabbitTemplate.send(ModificationRequestRabbitQueue.QUEUE_NAME, getMessage(event));
+		} catch (IOException e) {
+			throw new EventNotificationException("cannot publish delete request message", e);
+		}
+	}
+
+	private void publishAddRequestEvent(BookDto book) {
+		try {
+			UUID requestId = UUID.randomUUID();
+			AddRequestEvent event = new AddRequestEvent(requestId, Instant.now(), book);
+			rabbitTemplate.send(ModificationRequestRabbitQueue.QUEUE_NAME, getMessage(event));
+		} catch (IOException e) {
+			throw new EventNotificationException("cannot publish add request message", e);
+		}
+	}
+
+	private Message getMessage(Event event) throws JsonProcessingException {
+		String content = objectMapper.writeValueAsString(event);
+		MessageProperties messageProperties = new MessageProperties();
+		messageProperties.setType(event.getClass().getName());
+		return new Message(content.getBytes(), messageProperties);
 	}
 
 	@RabbitListener(queues = QueryResultRabbitQueue.QUEUE_NAME)
