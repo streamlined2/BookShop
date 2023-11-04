@@ -5,9 +5,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.streamlined.bookshop.service.ModifyingOperationKind;
+import com.streamlined.bookshop.service.BookModifyingOperationKind;
 
-public record ModificationRequestEvent(UUID requestId, ModifyingOperationKind kind, Object... params) {
+public record ModificationRequestEvent(UUID requestId, BookModifyingOperationKind kind, Object... params) {
 
 	@Override
 	public boolean equals(Object o) {

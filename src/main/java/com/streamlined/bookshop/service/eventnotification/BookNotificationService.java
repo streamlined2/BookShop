@@ -6,13 +6,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.streamlined.bookshop.model.book.BookDto;
-import com.streamlined.bookshop.service.ModifyingOperationKind;
+import com.streamlined.bookshop.service.BookModifyingOperationKind;
 
 public interface BookNotificationService {
 
 	void publishQueryResult(UUID requestId, List<BookDto> bookList, Instant instant, OperationStatus status);
 
-	void publishModificationStatus(UUID requestId, ModifyingOperationKind operation, Optional<BookDto> book,
+	void publishModificationStatus(UUID requestId, BookModifyingOperationKind operation, Optional<BookDto> book,
 			Instant instant, OperationStatus status);
 
 }

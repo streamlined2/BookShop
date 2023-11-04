@@ -5,10 +5,10 @@ import java.util.Objects;
 import java.util.UUID;
 
 import com.streamlined.bookshop.model.book.BookDto;
-import com.streamlined.bookshop.service.ModifyingOperationKind;
+import com.streamlined.bookshop.service.BookModifyingOperationKind;
 import com.streamlined.bookshop.service.eventconsumption.QueryRequestEvent;
 
-public record ModificationResponseEvent(UUID requestId, ModifyingOperationKind operation, BookDto book, Instant instant,
+public record ModificationResponseEvent(UUID requestId, BookModifyingOperationKind operation, BookDto book, Instant instant,
 		OperationStatus operationStatus) implements ResponseEvent {
 
 	@Override

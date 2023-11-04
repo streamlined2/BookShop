@@ -21,8 +21,8 @@ import com.streamlined.bookshop.exception.RequestProcessingException;
 import com.streamlined.bookshop.exception.EventNotificationException;
 import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.model.book.BookMapper;
-import com.streamlined.bookshop.service.ModifyingOperationKind;
-import com.streamlined.bookshop.service.QueryingOperationKind;
+import com.streamlined.bookshop.service.BookModifyingOperationKind;
+import com.streamlined.bookshop.service.BookQueryingOperationKind;
 import com.streamlined.bookshop.service.eventconsumption.ModificationRequestEvent;
 import com.streamlined.bookshop.service.eventconsumption.QueryRequestEvent;
 import com.streamlined.bookshop.service.eventnotification.ModificationResponseEvent;
@@ -45,23 +45,23 @@ public class RequestGenerator {
 
 	@Scheduled(fixedRate = FIXED_RATE_SECONDS, timeUnit = TimeUnit.SECONDS)
 	public void run() {
-		publishQueryRequestEvent(QueryingOperationKind.QUERY_ALL);
+		publishQueryRequestEvent(BookQueryingOperationKind.QUERY_ALL);
 		ResponseEvent responseEvent;
 		while ((responseEvent = responseQueue.poll()) != null) {
 			if (responseEvent instanceof QueryResultEvent queryEvent) {
 				for (BookDto book : queryEvent.bookList()) {
-					publishQueryRequestEvent(QueryingOperationKind.QUERY_ONE_BY_ID, book.id());
-					publishModificationRequestEvent(ModifyingOperationKind.UPDATE, book, book.id());
-					publishModificationRequestEvent(ModifyingOperationKind.DELETE, book.id());
+					publishQueryRequestEvent(BookQueryingOperationKind.QUERY_ONE_BY_ID, book.id());
+					publishModificationRequestEvent(BookModifyingOperationKind.UPDATE, book, book.id());
+					publishModificationRequestEvent(BookModifyingOperationKind.DELETE, book.id());
 					var entity = bookMapper.toEntity(book);
 					entity.setId(UUID.randomUUID());
-					publishModificationRequestEvent(ModifyingOperationKind.ADD, bookMapper.toDto(entity));
+					publishModificationRequestEvent(BookModifyingOperationKind.ADD, bookMapper.toDto(entity));
 				}
 			}
 		}
 	}
 
-	public void publishQueryRequestEvent(QueryingOperationKind operationKind, Object... params) {
+	public void publishQueryRequestEvent(BookQueryingOperationKind operationKind, Object... params) {
 		try {
 			UUID requestId = UUID.randomUUID();
 			QueryRequestEvent event = new QueryRequestEvent(requestId, operationKind, params);
@@ -73,7 +73,7 @@ public class RequestGenerator {
 		}
 	}
 
-	public void publishModificationRequestEvent(ModifyingOperationKind operationKind, Object... params) {
+	public void publishModificationRequestEvent(BookModifyingOperationKind operationKind, Object... params) {
 		try {
 			UUID requestId = UUID.randomUUID();
 			ModificationRequestEvent event = new ModificationRequestEvent(requestId, operationKind, params);

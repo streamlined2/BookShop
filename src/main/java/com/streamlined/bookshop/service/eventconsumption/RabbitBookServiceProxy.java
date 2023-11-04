@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -57,14 +55,7 @@ public class RabbitBookServiceProxy {
 
 	private List<BookDto> dispatchExecuteQueryRequest(QueryRequestEvent event) {
 		try {
-			return switch (event.kind()) {
-			case QUERY_ALL -> bookService.getAllBooks();
-			case QUERY_ONE_BY_ID -> {
-				UUID id = UUID.fromString((String) event.params()[0]);
-				Optional<BookDto> dto = bookService.getBook(id);
-				yield dto.map(List::of).orElse(List.of());
-			}
-			};
+			return event.kind().executeQuery(bookService, event.params());
 		} catch (Exception e) {
 			throw new OperationFailedException("operation %s raised exception".formatted(event.kind().toString()), e);
 		}
@@ -106,21 +97,7 @@ public class RabbitBookServiceProxy {
 
 	private Optional<BookDto> dispatchExecuteModificationRequest(ModificationRequestEvent event) {
 		try {
-			return switch (event.kind()) {
-			case UPDATE -> {
-				BookDto book = objectMapper.convertValue((event.params()[0]), BookDto.class);
-				UUID id = UUID.fromString((String) event.params()[1]);
-				yield bookService.updateBook(book, id);
-			}
-			case DELETE -> {
-				UUID id = UUID.fromString((String) event.params()[0]);
-				yield bookService.deleteBook(id);
-			}
-			case ADD -> {
-				BookDto book = objectMapper.convertValue((event.params()[0]), BookDto.class);
-				yield bookService.addBook(book);
-			}
-			};
+			return event.kind().executeUpdate(bookService, objectMapper, event.params());
 		} catch (Exception e) {
 			throw new OperationFailedException("operation %s raised exception".formatted(event.kind().toString()), e);
 		}
