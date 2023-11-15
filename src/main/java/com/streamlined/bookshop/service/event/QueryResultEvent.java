@@ -1,32 +1,33 @@
 package com.streamlined.bookshop.service.event;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.streamlined.bookshop.model.book.BookDto;
+public final class QueryResultEvent<D> extends ResponseEvent {
 
-public record QueryResultEvent(UUID requestId, Instant instant, List<BookDto> bookList, OperationStatus operationStatus)
-		implements ResponseEvent {
+	private List<D> list;
 
-	@Override
-	public boolean equals(Object o) {
-		if (o instanceof QueryResultEvent e) {
-			return Objects.equals(requestId, e.requestId());
-		}
-		return false;
+	public QueryResultEvent() {
 	}
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(requestId);
+	public QueryResultEvent(List<D> list, UUID requestId, OperationStatus operationStatus) {
+		super(requestId, operationStatus);
+		this.list = list;
+	}
+
+	public List<D> getList() {
+		return list;
+	}
+
+	public void setList(List<D> list) {
+		this.list = list;
 	}
 
 	@Override
 	public String toString() {
-		return "[Query result: request id=%s, book list=%s, instant=%s, status=%s]".formatted(Objects.toString(requestId),
-				Objects.toString(bookList), Objects.toString(instant), Objects.toString(operationStatus));
+		return "[Query result: request id=%s, list=%s, instant=%s, status=%s]".formatted(Objects.toString(requestId),
+				Objects.toString(list), Objects.toString(instant), Objects.toString(operationStatus));
 	}
 
 }

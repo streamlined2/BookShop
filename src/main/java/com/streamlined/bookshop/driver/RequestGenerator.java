@@ -1,12 +1,13 @@
 package com.streamlined.bookshop.driver;
 
 import java.io.IOException;
-import java.time.Instant;
+
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -15,25 +16,25 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.streamlined.bookshop.exception.RequestProcessingException;
 import com.streamlined.bookshop.exception.EventNotificationException;
 import com.streamlined.bookshop.model.book.BookDto;
 import com.streamlined.bookshop.model.book.BookMapper;
-import com.streamlined.bookshop.service.event.UpdateRequestEvent;
-import com.streamlined.bookshop.service.event.AddRequestEvent;
-import com.streamlined.bookshop.service.event.DeleteRequestEvent;
+import com.streamlined.bookshop.service.event.UpdateBookRequestEvent;
+import com.streamlined.bookshop.service.event.AddBookRequestEvent;
+import com.streamlined.bookshop.service.event.DeleteBookRequestEvent;
 import com.streamlined.bookshop.service.event.Event;
 import com.streamlined.bookshop.service.event.ModificationResponseEvent;
-import com.streamlined.bookshop.service.event.QueryAllRequestEvent;
-import com.streamlined.bookshop.service.event.QueryOneRequestEvent;
+import com.streamlined.bookshop.service.event.QueryAllBookRequestEvent;
+import com.streamlined.bookshop.service.event.QueryOneBookRequestEvent;
 import com.streamlined.bookshop.service.event.QueryResultEvent;
 import com.streamlined.bookshop.service.event.ResponseEvent;
-import com.streamlined.bookshop.service.event.queue.ModificationRequestRabbitQueue;
-import com.streamlined.bookshop.service.event.queue.ModificationStatusRabbitQueue;
-import com.streamlined.bookshop.service.event.queue.QueryRequestRabbitQueue;
-import com.streamlined.bookshop.service.event.queue.QueryResultRabbitQueue;
-
+import static com.streamlined.bookshop.config.messagebroker.RabbitConfig.Service;
+import static com.streamlined.bookshop.config.messagebroker.RabbitConfig.Kind;
+import static com.streamlined.bookshop.config.messagebroker.RabbitConfig.Type;
+import static com.streamlined.bookshop.config.messagebroker.RabbitConfig.getRoutingKey;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -41,6 +42,7 @@ import lombok.RequiredArgsConstructor;
 public class RequestGenerator {
 
 	private final RabbitTemplate rabbitTemplate;
+	private final DirectExchange exchange;
 	private final ObjectMapper objectMapper;
 	private final BookMapper bookMapper;
 
@@ -54,8 +56,8 @@ public class RequestGenerator {
 		publishQueryAllRequestEvent();
 		ResponseEvent responseEvent;
 		while ((responseEvent = responseQueue.poll()) != null) {
-			if (responseEvent instanceof QueryResultEvent queryEvent && queryEvent.bookList().size() > 1) {
-				for (BookDto book : queryEvent.bookList()) {
+			if (responseEvent instanceof QueryResultEvent qEvent) {
+				for (BookDto book : ((QueryResultEvent<BookDto>) qEvent).getList()) {
 					publishQueryOneRequestEvent(book.id());
 					publishUpdateRequestEvent(book, book.id());
 					publishDeleteRequestEvent(book.id());
@@ -65,14 +67,13 @@ public class RequestGenerator {
 				}
 			}
 		}
-
 	}
 
 	private void publishQueryAllRequestEvent() {
 		try {
-			UUID requestId = UUID.randomUUID();
-			QueryAllRequestEvent event = new QueryAllRequestEvent(requestId, Instant.now());
-			rabbitTemplate.send(QueryRequestRabbitQueue.QUEUE_NAME, getMessage(event));
+			QueryAllBookRequestEvent event = new QueryAllBookRequestEvent();
+			rabbitTemplate.send(exchange.getName(), getRoutingKey(Service.BOOK_SERVICE, Kind.QUERY, Type.REQUEST),
+					getMessage(event));
 		} catch (IOException e) {
 			throw new EventNotificationException("cannot publish query all request message", e);
 		}
@@ -80,9 +81,9 @@ public class RequestGenerator {
 
 	private void publishQueryOneRequestEvent(UUID bookId) {
 		try {
-			UUID requestId = UUID.randomUUID();
-			QueryOneRequestEvent event = new QueryOneRequestEvent(requestId, Instant.now(), bookId);
-			rabbitTemplate.send(QueryRequestRabbitQueue.QUEUE_NAME, getMessage(event));
+			QueryOneBookRequestEvent event = new QueryOneBookRequestEvent(bookId);
+			rabbitTemplate.send(exchange.getName(), getRoutingKey(Service.BOOK_SERVICE, Kind.QUERY, Type.REQUEST),
+					getMessage(event));
 		} catch (IOException e) {
 			throw new EventNotificationException("cannot publish query one request message", e);
 		}
@@ -90,9 +91,9 @@ public class RequestGenerator {
 
 	private void publishUpdateRequestEvent(BookDto book, UUID bookId) {
 		try {
-			UUID requestId = UUID.randomUUID();
-			UpdateRequestEvent event = new UpdateRequestEvent(requestId, Instant.now(), book, bookId);
-			rabbitTemplate.send(ModificationRequestRabbitQueue.QUEUE_NAME, getMessage(event));
+			UpdateBookRequestEvent event = new UpdateBookRequestEvent(book, bookId);
+			rabbitTemplate.send(exchange.getName(),
+					getRoutingKey(Service.BOOK_SERVICE, Kind.MODIFICATION, Type.REQUEST), getMessage(event));
 		} catch (IOException e) {
 			throw new EventNotificationException("cannot publish update request message", e);
 		}
@@ -100,9 +101,9 @@ public class RequestGenerator {
 
 	private void publishDeleteRequestEvent(UUID bookId) {
 		try {
-			UUID requestId = UUID.randomUUID();
-			DeleteRequestEvent event = new DeleteRequestEvent(requestId, Instant.now(), bookId);
-			rabbitTemplate.send(ModificationRequestRabbitQueue.QUEUE_NAME, getMessage(event));
+			DeleteBookRequestEvent event = new DeleteBookRequestEvent(bookId);
+			rabbitTemplate.send(exchange.getName(),
+					getRoutingKey(Service.BOOK_SERVICE, Kind.MODIFICATION, Type.REQUEST), getMessage(event));
 		} catch (IOException e) {
 			throw new EventNotificationException("cannot publish delete request message", e);
 		}
@@ -110,9 +111,9 @@ public class RequestGenerator {
 
 	private void publishAddRequestEvent(BookDto book) {
 		try {
-			UUID requestId = UUID.randomUUID();
-			AddRequestEvent event = new AddRequestEvent(requestId, Instant.now(), book);
-			rabbitTemplate.send(ModificationRequestRabbitQueue.QUEUE_NAME, getMessage(event));
+			AddBookRequestEvent event = new AddBookRequestEvent(book);
+			rabbitTemplate.send(exchange.getName(),
+					getRoutingKey(Service.BOOK_SERVICE, Kind.MODIFICATION, Type.REQUEST), getMessage(event));
 		} catch (IOException e) {
 			throw new EventNotificationException("cannot publish add request message", e);
 		}
@@ -125,11 +126,13 @@ public class RequestGenerator {
 		return new Message(content.getBytes(), messageProperties);
 	}
 
-	@RabbitListener(queues = QueryResultRabbitQueue.QUEUE_NAME)
+	@RabbitListener(queues = "#{bookServiceQueryResponseQueue}")
 	public void consumeQueryResultMessage(Message message) {
 		try {
 			String body = new String(message.getBody());
-			QueryResultEvent event = objectMapper.readValue(body, QueryResultEvent.class);
+			QueryResultEvent<BookDto> event = objectMapper.readValue(body,
+					new TypeReference<QueryResultEvent<BookDto>>() {
+					});
 			responseQueue.add(event);
 			System.out.println(event);
 		} catch (IOException e) {
@@ -137,11 +140,13 @@ public class RequestGenerator {
 		}
 	}
 
-	@RabbitListener(queues = ModificationStatusRabbitQueue.QUEUE_NAME)
+	@RabbitListener(queues = "#{bookServiceModificationResponseQueue}")
 	public void consumeModificationStatusMessage(Message message) {
 		try {
 			String body = new String(message.getBody());
-			ModificationResponseEvent event = objectMapper.readValue(body, ModificationResponseEvent.class);
+			ModificationResponseEvent<BookDto> event = objectMapper.readValue(body,
+					new TypeReference<ModificationResponseEvent<BookDto>>() {
+					});
 			responseQueue.add(event);
 			System.out.println(event);
 		} catch (IOException e) {

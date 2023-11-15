@@ -2,11 +2,8 @@ package com.streamlined.bookshop.service.event;
 
 import java.util.Optional;
 
-import com.streamlined.bookshop.model.book.BookDto;
-import com.streamlined.bookshop.service.book.BookService;
+public abstract class ModificationRequestEvent<D,S> extends RequestEvent {
 
-public interface ModificationRequestEvent extends RequestEvent {
-
-	public Optional<BookDto> executeUpdate(BookService bookService);
+	public abstract Optional<D> executeUpdate(S service);
 
 }

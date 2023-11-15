@@ -1,31 +1,32 @@
 package com.streamlined.bookshop.service.event;
 
-import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.streamlined.bookshop.model.book.BookDto;
+public final class ModificationResponseEvent<D> extends ResponseEvent {
 
-public record ModificationResponseEvent(UUID requestId, BookDto book, Instant instant, OperationStatus operationStatus)
-		implements ResponseEvent {
+	private D item;
 
-	@Override
-	public boolean equals(Object o) {
-		if (o instanceof ModificationResponseEvent e) {
-			return Objects.equals(requestId, e.requestId());
-		}
-		return false;
+	public ModificationResponseEvent() {
 	}
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(requestId);
+	public ModificationResponseEvent(D item, UUID requestId, OperationStatus operationStatus) {
+		super(requestId, operationStatus);
+		this.item = item;
+	}
+
+	public D getItem() {
+		return item;
+	}
+
+	public void setItem(D item) {
+		this.item = item;
 	}
 
 	@Override
 	public String toString() {
-		return "[Modification response: request id=%s, book=%s, instant=%s, status=%s]".formatted(
-				Objects.toString(requestId), Objects.toString(book), Objects.toString(instant),
+		return "[Modification response: request id=%s, item=%s, instant=%s, status=%s]".formatted(
+				Objects.toString(requestId), Objects.toString(item), Objects.toString(instant),
 				Objects.toString(operationStatus));
 	}
 
